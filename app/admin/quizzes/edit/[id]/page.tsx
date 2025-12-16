@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { QuizBuilder } from "@/components/quiz-builder"
+import { BackButton } from "@/components/back-button"
 import { quizStorage } from "@/lib/quiz-storage"
 import type { Quiz } from "@/lib/quiz-types"
 import { useParams } from "next/navigation"
@@ -26,5 +27,12 @@ export default function EditQuizPage() {
     )
   }
 
-  return <QuizBuilder initialQuiz={quiz} />
+  return (
+    <div>
+      <div className="container mx-auto px-4 py-4">
+        <BackButton href="/admin/quizzes" />
+      </div>
+      <QuizBuilder initialQuiz={quiz} />
+    </div>
+  )
 }

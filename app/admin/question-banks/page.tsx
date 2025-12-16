@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n-context"
 import { NavHeader } from "@/components/nav-header"
+import { BackButton } from "@/components/back-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -95,6 +96,7 @@ export default function QuestionBanksPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          <BackButton href="/" />
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold">{language === "km" ? "ធនាគារសំណួរ" : "Question Banks"}</h1>

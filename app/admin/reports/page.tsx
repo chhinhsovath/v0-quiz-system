@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n-context"
 import { NavHeader } from "@/components/nav-header"
+import { BackButton } from "@/components/back-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -85,6 +86,7 @@ export default function ReportsPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          <BackButton href="/" />
           <div className="mb-6">
             <h1 className="text-3xl font-bold">{language === "km" ? "របាយការណ៍ និងការនាំចេញ" : "Reports & Export"}</h1>
             <p className="text-muted-foreground">

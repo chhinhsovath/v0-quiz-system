@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n-context"
 import { useParams } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
+import { BackButton } from "@/components/back-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,7 +16,6 @@ import { Plus, Users, Trash2, Edit } from "lucide-react"
 import { quizStorage } from "@/lib/quiz-storage"
 import { gradelevels } from "@/lib/i18n"
 import type { Class, School, User } from "@/lib/quiz-types"
-import Link from "next/link"
 
 export default function ClassesPage() {
   const params = useParams()
@@ -102,11 +102,10 @@ export default function ClassesPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-6">
-            <Link href="/admin/schools">
-              <Button variant="ghost" size="sm" className="mb-4">
-                ← {language === "km" ? "ត្រលប់ទៅសាលា" : "Back to Schools"}
-              </Button>
-            </Link>
+            <BackButton
+              href="/admin/schools"
+              label={language === "km" ? "ត្រឡប់ទៅសាលា" : "Back to Schools"}
+            />
 
             <div className="flex items-center justify-between">
               <div>

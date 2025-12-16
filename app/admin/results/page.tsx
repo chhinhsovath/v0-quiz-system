@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { NavHeader } from "@/components/nav-header"
+import { BackButton } from "@/components/back-button"
 import { quizStorage } from "@/lib/quiz-storage"
 import type { QuizAttempt, Quiz, Category } from "@/lib/quiz-types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -77,6 +78,7 @@ export default function AdminResultsPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          <BackButton href="/" />
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Quiz Results</h1>
             <p className="text-muted-foreground">Monitor student performance and quiz statistics</p>
