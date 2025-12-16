@@ -4,7 +4,9 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useI18n } from "@/lib/i18n-context"
 import { NavHeader } from "@/components/nav-header"
+import { BackButton } from "@/components/back-button"
 import { quizStorage } from "@/lib/quiz-storage"
 import type { Category } from "@/lib/quiz-types"
 import { Button } from "@/components/ui/button"
@@ -25,6 +27,7 @@ import { useRouter } from "next/navigation"
 
 export default function CategoriesPage() {
   const { isAdmin } = useAuth()
+  const { language } = useI18n()
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -77,7 +80,13 @@ export default function CategoriesPage() {
   }
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this category? Quizzes in this category will not be deleted.")) {
+    if (
+      confirm(
+        language === "km"
+          ? "តើអ្នកប្រាកដថាចង់លុបប្រភេទនេះទេ? តេស្តក្នុងប្រភេទនេះនឹងមិនត្រូវបានលុបទេ។"
+          : "Are you sure you want to delete this category? Quizzes in this category will not be deleted."
+      )
+    ) {
       quizStorage.deleteCategory(id)
       loadCategories()
     }
@@ -103,35 +112,58 @@ export default function CategoriesPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Categories</h1>
-              <p className="text-muted-foreground">Organize your quizzes by subjects or topics</p>
+          <BackButton href="/" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                {language === "km" ? "ប្រភេទ" : "Categories"}
+              </h1>
+              <p className="text-muted-foreground">
+                {language === "km" ? "រៀបចំតេស្តរបស់អ្នកតាមប្រធានបទ" : "Organize your quizzes by subjects or topics"}
+              </p>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Category
+                  {language === "km" ? "បន្ថែមប្រភេទ" : "Add Category"}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>{editingCategory ? "Edit Category" : "Create New Category"}</DialogTitle>
+                  <DialogTitle>
+                    {editingCategory
+                      ? language === "km"
+                        ? "កែសម្រួលប្រភេទ"
+                        : "Edit Category"
+                      : language === "km"
+                        ? "បង្កើតប្រភេទថ្មី"
+                        : "Create New Category"}
+                  </DialogTitle>
                   <DialogDescription>
                     {editingCategory
-                      ? "Update the category details below"
-                      : "Add a new category to organize your quizzes"}
+                      ? language === "km"
+                        ? "ធ្វើបច្ចុប្បន្នភាពព័ត៌មានលម្អិតប្រភេទខាងក្រោម"
+                        : "Update the category details below"
+                      : language === "km"
+                        ? "បន្ថែមប្រភេទថ្មីដើម្បីរៀបចំតេស្តរបស់អ្នក"
+                        : "Add a new category to organize your quizzes"}
                   </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Category Name</Label>
+                    <Label htmlFor="name">
+                      {language === "km" ? "ឈ្មោះប្រភេទ" : "Category Name"}
+                    </Label>
                     <Input
                       id="name"
-                      placeholder="e.g., Mathematics, Science, History"
+                      placeholder={
+                        language === "km"
+                          ? "ឧ. គណិតវិទ្យា វិទ្យាសាស្ត្រ ប្រវត្តិសាស្ត្រ"
+                          : "e.g., Mathematics, Science, History"
+                      }
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
@@ -139,10 +171,16 @@ export default function CategoriesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">
+                      {language === "km" ? "ការពិពណ៌នា" : "Description"}
+                    </Label>
                     <Textarea
                       id="description"
-                      placeholder="Brief description of this category"
+                      placeholder={
+                        language === "km"
+                          ? "ការពិពណ៌នាសង្ខេបអំពីប្រភេទនេះ"
+                          : "Brief description of this category"
+                      }
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       rows={3}
@@ -150,7 +188,9 @@ export default function CategoriesPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="color">Color</Label>
+                    <Label htmlFor="color">
+                      {language === "km" ? "ពណ៌" : "Color"}
+                    </Label>
                     <div className="flex items-center gap-2">
                       <Input
                         id="color"
@@ -165,9 +205,18 @@ export default function CategoriesPage() {
 
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => handleDialogOpenChange(false)}>
-                      Cancel
+                      {language === "km" ? "បោះបង់" : "Cancel"}
                     </Button>
-                    <Button type="submit">{editingCategory ? "Update" : "Create"} Category</Button>
+                    <Button type="submit">
+                      {editingCategory
+                        ? language === "km"
+                          ? "ធ្វើបច្ចុប្បន្នភាព"
+                          : "Update"
+                        : language === "km"
+                          ? "បង្កើត"
+                          : "Create"}{" "}
+                      {language === "km" ? "ប្រភេទ" : "Category"}
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -178,9 +227,13 @@ export default function CategoriesPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No categories yet</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {language === "km" ? "មិនទាន់មានប្រភេទនៅឡើយ" : "No categories yet"}
+                </h3>
                 <p className="text-muted-foreground text-center mb-4">
-                  Create your first category to start organizing quizzes
+                  {language === "km"
+                    ? "បង្កើតប្រភេទដំបូងរបស់អ្នកដើម្បីចាប់ផ្តើមរៀបចំតេស្ត"
+                    : "Create your first category to start organizing quizzes"}
                 </p>
               </CardContent>
             </Card>
@@ -213,7 +266,7 @@ export default function CategoriesPage() {
                         onClick={() => handleEdit(category)}
                       >
                         <Pencil className="h-4 w-4 mr-2" />
-                        Edit
+                        {language === "km" ? "កែសម្រួល" : "Edit"}
                       </Button>
                       <Button
                         variant="outline"
