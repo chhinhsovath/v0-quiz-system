@@ -1,0 +1,256 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useI18n } from "@/lib/i18n-context"
+import { NavHeader } from "@/components/nav-header"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Plus, Building2, MapPin, Trash2, Edit } from "lucide-react"
+import { quizStorage } from "@/lib/quiz-storage"
+import type { School } from "@/lib/quiz-types"
+import Link from "next/link"
+
+export default function SchoolsPage() {
+  const { isAdmin, isTeacher } = useAuth()
+  const { language, t } = useI18n()
+  const [schools, setSchools] = useState<School[]>([])
+  const [isOpen, setIsOpen] = useState(false)
+  const [editingSchool, setEditingSchool] = useState<School | null>(null)
+  const [formData, setFormData] = useState({
+    name: "",
+    nameKm: "",
+    address: "",
+    province: "",
+    district: "",
+  })
+
+  useEffect(() => {
+    if (isAdmin || isTeacher) {
+      loadSchools()
+    }
+  }, [isAdmin, isTeacher])
+
+  const loadSchools = () => {
+    setSchools(quizStorage.getSchools())
+  }
+
+  const handleSubmit = () => {
+    if (editingSchool) {
+      quizStorage.updateSchool(editingSchool.id, formData)
+    } else {
+      const newSchool: School = {
+        id: `school-${Date.now()}`,
+        ...formData,
+        createdAt: new Date().toISOString(),
+      }
+      quizStorage.addSchool(newSchool)
+    }
+
+    loadSchools()
+    setIsOpen(false)
+    resetForm()
+  }
+
+  const handleDelete = (id: string) => {
+    if (confirm(language === "km" ? "តើអ្នកប្រាកដទេ?" : "Are you sure?")) {
+      quizStorage.deleteSchool(id)
+      loadSchools()
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({ name: "", nameKm: "", address: "", province: "", district: "" })
+    setEditingSchool(null)
+  }
+
+  const handleEdit = (school: School) => {
+    setEditingSchool(school)
+    setFormData({
+      name: school.name,
+      nameKm: school.nameKm || "",
+      address: school.address,
+      province: school.province,
+      district: school.district,
+    })
+    setIsOpen(true)
+  }
+
+  if (!isAdmin && !isTeacher) {
+    return <div>{language === "km" ? "អ្នកមិនមានសិទ្ធិចូលប្រើទំព័រនេះ" : "Access denied"}</div>
+  }
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      <NavHeader />
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">{language === "km" ? "គ្រឹះស្ថានសិក្សា" : "Schools"}</h1>
+              <p className="text-muted-foreground">
+                {language === "km" ? "គ្រប់គ្រងគ្រឹះស្ថានសិក្សា" : "Manage educational institutions"}
+              </p>
+            </div>
+
+            {isAdmin && (
+              <Dialog
+                open={isOpen}
+                onOpenChange={(open) => {
+                  setIsOpen(open)
+                  if (!open) resetForm()
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {language === "km" ? "បន្ថែមសាលា" : "Add School"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingSchool
+                        ? language === "km"
+                          ? "កែសម្រួលសាលា"
+                          : "Edit School"
+                        : language === "km"
+                          ? "បន្ថែមសាលា"
+                          : "Add School"}
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{language === "km" ? "ឈ្មោះ (English)" : "Name (English)"}</Label>
+                        <Input
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          placeholder="Phnom Penh High School"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{language === "km" ? "ឈ្មោះ (ខ្មែរ)" : "Name (Khmer)"}</Label>
+                        <Input
+                          value={formData.nameKm}
+                          onChange={(e) => setFormData({ ...formData, nameKm: e.target.value })}
+                          placeholder="វិទ្យាល័យភ្នំពេញ"
+                          className="font-khmer"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>{language === "km" ? "អាសយដ្ឋាន" : "Address"}</Label>
+                      <Input
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        placeholder="Street 123, Sangkat..."
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{language === "km" ? "ខេត្ត" : "Province"}</Label>
+                        <Input
+                          value={formData.province}
+                          onChange={(e) => setFormData({ ...formData, province: e.target.value })}
+                          placeholder={language === "km" ? "ភ្នំពេញ" : "Phnom Penh"}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>{language === "km" ? "ស្រុក" : "District"}</Label>
+                        <Input
+                          value={formData.district}
+                          onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                          placeholder={language === "km" ? "ដូនពេញ" : "Doun Penh"}
+                        />
+                      </div>
+                    </div>
+
+                    <Button onClick={handleSubmit} className="w-full">
+                      {editingSchool
+                        ? language === "km"
+                          ? "រក្សាទុកការផ្លាស់ប្តូរ"
+                          : "Save Changes"
+                        : language === "km"
+                          ? "បន្ថែមសាលា"
+                          : "Add School"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {schools.map((school) => (
+              <Card key={school.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">
+                          {language === "km" && school.nameKm ? school.nameKm : school.name}
+                        </CardTitle>
+                      </div>
+                    </div>
+
+                    {isAdmin && (
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(school)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(school.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p>{school.address}</p>
+                        <p className="text-muted-foreground">
+                          {school.district}, {school.province}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link href={`/admin/schools/${school.id}/classes`}>
+                    <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent">
+                      {language === "km" ? "មើលថ្នាក់" : "View Classes"}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {schools.length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{language === "km" ? "មិនទាន់មានសាលា" : "No schools yet"}</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
