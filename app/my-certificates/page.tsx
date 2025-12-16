@@ -32,8 +32,8 @@ export default function MyCertificatesPage() {
         <div className="max-w-6xl mx-auto">
           <BackButton href="/" />
           <div className="mb-6">
-            <h1 className="text-3xl font-bold">{language === "km" ? "វិញ្ញាបនប័ត្ររបស់ខ្ញុំ" : "My Certificates"}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">{language === "km" ? "វិញ្ញាបនប័ត្ររបស់ខ្ញុំ" : "My Certificates"}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               {language === "km" ? "វិញ្ញាបនប័ត្រដែលអ្នកទទួលបាន" : "Certificates you've earned"}
             </p>
           </div>
@@ -47,14 +47,14 @@ export default function MyCertificatesPage() {
                   <Card key={cert.id} className="border-2 border-primary/20">
                     <CardHeader>
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Award className="h-6 w-6 text-primary" />
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Award className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base sm:text-lg truncate">
                             {language === "km" && quiz?.titleKm ? quiz.titleKm : quiz?.title}
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {new Date(cert.issuedAt).toLocaleDateString(language === "km" ? "km-KH" : "en-US")}
                           </p>
                         </div>
@@ -69,7 +69,7 @@ export default function MyCertificatesPage() {
                       </div>
 
                       <Link href={`/certificates/${cert.id}`}>
-                        <Button variant="outline" size="sm" className="w-full bg-transparent">
+                        <Button variant="outline" size="sm" className="w-full bg-transparent min-h-[40px]">
                           <Eye className="h-4 w-4 mr-2" />
                           {language === "km" ? "មើលវិញ្ញាបនប័ត្រ" : "View Certificate"}
                         </Button>

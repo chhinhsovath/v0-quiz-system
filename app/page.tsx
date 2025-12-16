@@ -14,7 +14,8 @@ export default function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 relative">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
         <LoginForm />
       </div>
     )

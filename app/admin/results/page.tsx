@@ -79,9 +79,11 @@ export default function AdminResultsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <BackButton href="/" />
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Quiz Results</h1>
-            <p className="text-muted-foreground">Monitor student performance and quiz statistics</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">Quiz Results</h1>
+              <p className="text-muted-foreground">Monitor student performance and quiz statistics</p>
+            </div>
           </div>
 
           {/* Filter */}

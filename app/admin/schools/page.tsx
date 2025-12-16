@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n-context"
 import { NavHeader } from "@/components/nav-header"
+import { BackButton } from "@/components/back-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -89,10 +90,11 @@ export default function SchoolsPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold">{language === "km" ? "គ្រឹះស្ថានសិក្សា" : "Schools"}</h1>
-              <p className="text-muted-foreground">
+          <BackButton href="/" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold">{language === "km" ? "គ្រឹះស្ថានសិក្សា" : "Schools"}</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 {language === "km" ? "គ្រប់គ្រងគ្រឹះស្ថានសិក្សា" : "Manage educational institutions"}
               </p>
             </div>
@@ -106,12 +108,12 @@ export default function SchoolsPage() {
                 }}
               >
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
                     {language === "km" ? "បន្ថែមសាលា" : "Add School"}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingSchool
@@ -125,7 +127,7 @@ export default function SchoolsPage() {
                   </DialogHeader>
 
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{language === "km" ? "ឈ្មោះ (English)" : "Name (English)"}</Label>
                         <Input
@@ -155,7 +157,7 @@ export default function SchoolsPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{language === "km" ? "ខេត្ត" : "Province"}</Label>
                         <Input
@@ -207,11 +209,11 @@ export default function SchoolsPage() {
                     </div>
 
                     {isAdmin && (
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(school)}>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(school)} className="h-8 w-8 p-0">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(school.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(school.id)} className="h-8 w-8 p-0">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

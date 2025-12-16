@@ -83,44 +83,44 @@ export default function MyResultsPage() {
         <div className="max-w-6xl mx-auto">
           <BackButton href="/" />
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">My Results</h1>
-            <p className="text-muted-foreground">Track your quiz performance and progress</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Results</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Track your quiz performance and progress</p>
           </div>
 
           {/* Stats Overview */}
-          <div className="grid md:grid-cols-3 gap-4 mb-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>Total Attempts</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Total Attempts</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-primary" />
-                  <span className="text-3xl font-bold">{attempts.length}</span>
+                  <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <span className="text-2xl sm:text-3xl font-bold">{attempts.length}</span>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>Quizzes Taken</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Quizzes Taken</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  <span className="text-3xl font-bold">{totalQuizzesTaken}</span>
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <span className="text-2xl sm:text-3xl font-bold">{totalQuizzesTaken}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="sm:col-span-2 md:col-span-1">
               <CardHeader className="pb-3">
-                <CardDescription>Average Score</CardDescription>
+                <CardDescription className="text-xs sm:text-sm">Average Score</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-primary" />
-                  <span className={`text-3xl font-bold ${getScoreColor(averageScore)}`}>
+                  <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <span className={`text-2xl sm:text-3xl font-bold ${getScoreColor(averageScore)}`}>
                     {averageScore.toFixed(0)}%
                   </span>
                 </div>
@@ -140,7 +140,7 @@ export default function MyResultsPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Recent Attempts</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">Recent Attempts</h2>
               {attempts.map((attempt) => {
                 const quiz = getQuizById(attempt.quizId)
                 if (!quiz) return null
@@ -151,10 +151,10 @@ export default function MyResultsPage() {
                 return (
                   <Card key={attempt.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <CardTitle className="text-lg">{quiz.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <CardTitle className="text-base sm:text-lg">{quiz.title}</CardTitle>
                             {category && (
                               <Badge
                                 variant="secondary"
@@ -168,9 +168,9 @@ export default function MyResultsPage() {
                               </Badge>
                             )}
                           </div>
-                          <CardDescription>{quiz.description}</CardDescription>
+                          <CardDescription className="text-sm sm:text-base">{quiz.description}</CardDescription>
                         </div>
-                        <div className={`text-3xl font-bold ${getScoreColor(percentage)}`}>
+                        <div className={`text-2xl sm:text-3xl font-bold ${getScoreColor(percentage)}`}>
                           {percentage.toFixed(0)}%
                         </div>
                       </div>
@@ -199,7 +199,7 @@ export default function MyResultsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/quizzes/${quiz.id}`)}
-                            className="bg-transparent"
+                            className="bg-transparent w-full sm:w-auto"
                           >
                             Retake Quiz
                           </Button>

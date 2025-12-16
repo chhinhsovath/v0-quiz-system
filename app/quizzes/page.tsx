@@ -64,8 +64,8 @@ export default function QuizzesPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Available Quizzes</h1>
-            <p className="text-muted-foreground">Browse quizzes and test your knowledge</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Available Quizzes</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Browse quizzes and test your knowledge</p>
           </div>
 
           {quizzes.length === 0 ? (
@@ -108,7 +108,7 @@ export default function QuizzesPage() {
                                     </Badge>
                                   )}
                                 </div>
-                                <CardDescription>{quiz.description}</CardDescription>
+                                <CardDescription className="text-sm sm:text-base">{quiz.description}</CardDescription>
                               </CardHeader>
                               <CardContent>
                                 <div className="flex flex-wrap gap-3 mb-4 text-sm text-muted-foreground">

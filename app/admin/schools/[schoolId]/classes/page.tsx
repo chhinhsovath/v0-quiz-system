@@ -16,6 +16,7 @@ import { Plus, Users, Trash2, Edit } from "lucide-react"
 import { quizStorage } from "@/lib/quiz-storage"
 import { gradelevels } from "@/lib/i18n"
 import type { Class, School, User } from "@/lib/quiz-types"
+import Link from "next/link"
 
 export default function ClassesPage() {
   const params = useParams()
@@ -107,9 +108,9 @@ export default function ClassesPage() {
               label={language === "km" ? "ត្រឡប់ទៅសាលា" : "Back to Schools"}
             />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold">
                   {language === "km" && school.nameKm ? school.nameKm : school.name}
                 </h1>
                 <p className="text-muted-foreground">{language === "km" ? "ថ្នាក់ទាំងអស់" : "All Classes"}</p>
@@ -124,12 +125,12 @@ export default function ClassesPage() {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="w-full sm:w-auto">
                       <Plus className="h-4 w-4 mr-2" />
                       {language === "km" ? "បន្ថែមថ្នាក់" : "Add Class"}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>
                         {editingClass
@@ -143,7 +144,7 @@ export default function ClassesPage() {
                     </DialogHeader>
 
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>{language === "km" ? "ឈ្មោះថ្នាក់ (English)" : "Class Name (English)"}</Label>
                           <Input
@@ -245,10 +246,10 @@ export default function ClassesPage() {
 
                       {(isAdmin || (isTeacher && user?.id === classItem.teacherId)) && (
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(classItem)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(classItem)} className="h-8 w-8 p-0">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(classItem.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(classItem.id)} className="h-8 w-8 p-0">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>

@@ -201,13 +201,13 @@ export default function TakeQuizPage() {
           <div className="max-w-3xl mx-auto">
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl">Quiz Completed!</CardTitle>
-                <CardDescription>{quiz?.title}</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl">Quiz Completed!</CardTitle>
+                <CardDescription className="text-sm sm:text-base">{quiz?.title}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center py-6">
-                  <div className="text-5xl font-bold mb-2">{percentage.toFixed(0)}%</div>
-                  <p className="text-muted-foreground">
+                  <div className="text-4xl sm:text-5xl font-bold mb-2">{percentage.toFixed(0)}%</div>
+                  <p className="text-sm sm:text-base text-muted-foreground">
                     You scored {score} out of {maxScore} points
                   </p>
                 </div>
@@ -274,12 +274,12 @@ export default function TakeQuizPage() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button onClick={() => router.push("/quizzes")} className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={() => router.push("/quizzes")} className="w-full sm:flex-1">
                     Back to Quizzes
                   </Button>
                   {quiz?.allowMultipleAttempts && (
-                    <Button onClick={() => router.push(`/quizzes/${quiz.id}`)} variant="outline" className="flex-1">
+                    <Button onClick={() => router.push(`/quizzes/${quiz.id}`)} variant="outline" className="w-full sm:flex-1">
                       Retake Quiz
                     </Button>
                   )}
@@ -300,15 +300,15 @@ export default function TakeQuizPage() {
         <div className="max-w-3xl mx-auto">
           <Card className="mb-6">
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-2xl">{quiz.title}</CardTitle>
-                  <CardDescription>{quiz.description}</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="flex-1">
+                  <CardTitle className="text-xl sm:text-2xl">{quiz.title}</CardTitle>
+                  <CardDescription className="text-sm sm:text-base">{quiz.description}</CardDescription>
                 </div>
                 {timeRemaining !== null && (
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-sm sm:text-base bg-muted px-3 py-1.5 rounded-lg">
                     <Clock className="h-4 w-4" />
-                    <span className={timeRemaining < 60 ? "text-destructive font-bold" : ""}>
+                    <span className={timeRemaining < 60 ? "text-destructive font-bold" : "font-semibold"}>
                       {formatTime(timeRemaining)}
                     </span>
                   </div>
@@ -331,26 +331,27 @@ export default function TakeQuizPage() {
           <div className="space-y-6">
             {questions.map((question, index) => (
               <Card key={question.id}>
-                <CardHeader>
-                  <CardTitle className="text-lg">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base sm:text-lg">
                     Question {index + 1} of {questions.length}
                   </CardTitle>
-                  <CardDescription className="text-base text-foreground mt-2">{question.question}</CardDescription>
-                  <p className="text-sm text-muted-foreground">
+                  <CardDescription className="text-base sm:text-lg text-foreground mt-2 leading-relaxed">{question.question}</CardDescription>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     {question.points} point{question.points > 1 ? "s" : ""}
                   </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   {/* Multiple Choice */}
                   {question.type === "multiple-choice" && question.options && (
                     <RadioGroup
                       value={answers[question.id] as string}
                       onValueChange={(value) => handleAnswerChange(question.id, value)}
+                      className="space-y-3"
                     >
                       {question.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} />
-                          <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer">
+                        <div key={optIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors min-h-[48px]">
+                          <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} className="flex-shrink-0" />
+                          <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer text-sm sm:text-base leading-relaxed">
                             {option}
                           </Label>
                         </div>
@@ -360,10 +361,10 @@ export default function TakeQuizPage() {
 
                   {/* Multiple Select */}
                   {question.type === "multiple-select" && question.options && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground mb-2">Select all that apply</p>
+                    <div className="space-y-3">
+                      <p className="text-sm sm:text-base text-muted-foreground mb-2">Select all that apply</p>
                       {question.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex items-center space-x-2">
+                        <div key={optIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors min-h-[48px]">
                           <Checkbox
                             id={`${question.id}-${optIndex}`}
                             checked={((answers[question.id] as string[]) || []).includes(option)}
@@ -374,8 +375,9 @@ export default function TakeQuizPage() {
                                 : currentAnswers.filter((a) => a !== option)
                               handleAnswerChange(question.id, newAnswers)
                             }}
+                            className="flex-shrink-0"
                           />
-                          <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer">
+                          <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer text-sm sm:text-base leading-relaxed">
                             {option}
                           </Label>
                         </div>
@@ -388,11 +390,12 @@ export default function TakeQuizPage() {
                     <RadioGroup
                       value={answers[question.id] as string}
                       onValueChange={(value) => handleAnswerChange(question.id, value)}
+                      className="space-y-3"
                     >
                       {question.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} />
-                          <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer">
+                        <div key={optIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors min-h-[48px]">
+                          <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} className="flex-shrink-0" />
+                          <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer text-sm sm:text-base leading-relaxed">
                             {option}
                           </Label>
                         </div>
@@ -406,6 +409,7 @@ export default function TakeQuizPage() {
                       placeholder="Type your answer here"
                       value={(answers[question.id] as string) || ""}
                       onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                      className="w-full text-base min-h-[48px]"
                     />
                   )}
 
@@ -521,29 +525,30 @@ export default function TakeQuizPage() {
                         value={(answers[question.id] as string) || ""}
                         onChange={(e) => handleAnswerChange(question.id, e.target.value)}
                         rows={8}
-                        className="resize-none"
+                        className="resize-none w-full text-base"
                       />
-                      <p className="text-xs text-muted-foreground">This will be manually graded by your instructor</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">This will be manually graded by your instructor</p>
                     </div>
                   )}
 
                   {question.type === "image-choice" && question.imageUrl && question.options && (
                     <div className="space-y-4">
-                      <div className="border rounded-lg p-4 bg-muted/30">
+                      <div className="border rounded-lg p-2 sm:p-4 bg-muted/30">
                         <img
                           src={question.imageUrl || "/placeholder.svg"}
                           alt="Question"
-                          className="w-full max-h-96 object-contain rounded"
+                          className="w-full max-h-64 sm:max-h-96 object-contain rounded"
                         />
                       </div>
                       <RadioGroup
                         value={answers[question.id] as string}
                         onValueChange={(value) => handleAnswerChange(question.id, value)}
+                        className="space-y-3"
                       >
                         {question.options.map((option, optIndex) => (
-                          <div key={optIndex} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} />
-                            <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer">
+                          <div key={optIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors min-h-[48px]">
+                            <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} className="flex-shrink-0" />
+                            <Label htmlFor={`${question.id}-${optIndex}`} className="flex-1 cursor-pointer text-sm sm:text-base leading-relaxed">
                               {option}
                             </Label>
                           </div>
@@ -590,12 +595,12 @@ export default function TakeQuizPage() {
           <Card className="mt-6">
             <CardContent className="pt-6">
               {Object.keys(answers).length < questions.length && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <AlertCircle className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   <span>You have unanswered questions</span>
                 </div>
               )}
-              <Button onClick={handleSubmit} className="w-full" size="lg">
+              <Button onClick={handleSubmit} className="w-full min-h-[48px] text-base" size="lg">
                 Submit Quiz
               </Button>
             </CardContent>

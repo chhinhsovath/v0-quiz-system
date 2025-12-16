@@ -79,10 +79,10 @@ export default function OfflinePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold">{language === "km" ? "ម៉ូដក្រៅបណ្តាញ" : "Offline Mode"}</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl sm:text-3xl font-bold">{language === "km" ? "ម៉ូដក្រៅបណ្តាញ" : "Offline Mode"}</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {language === "km" ? "ទាញយកតេស្តដើម្បីប្រើក្រៅបណ្តាញ" : "Download quizzes to take them without internet"}
                 </p>
               </div>
@@ -107,11 +107,11 @@ export default function OfflinePage() {
             {/* Downloaded Quizzes */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <WifiOff className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <WifiOff className="h-4 w-4 sm:h-5 sm:w-5" />
                   {language === "km" ? "តេស្តដែលបានទាញយក" : "Downloaded Quizzes"}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-sm sm:text-base">
                   {language === "km" ? "តេស្តទាំងនេះអាចប្រើបានក្រៅបណ្តាញ" : "These quizzes are available offline"}
                 </CardDescription>
               </CardHeader>
@@ -121,25 +121,25 @@ export default function OfflinePage() {
                     {downloadedQuizzes.map((quiz) => (
                       <div
                         key={quiz.id}
-                        className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-muted/30 gap-3"
                       >
-                        <div className="flex-1">
-                          <h3 className="font-semibold">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm sm:text-base truncate">
                             {language === "km" && quiz.titleKm ? quiz.titleKm : quiz.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {quiz.questions.length} {language === "km" ? "សំណួរ" : "questions"} • {quiz.timeLimit}{" "}
                             {language === "km" ? "នាទី" : "minutes"}
                           </p>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Link href={`/quizzes/${quiz.id}`}>
-                            <Button size="sm" variant="outline">
+                          <Link href={`/quizzes/${quiz.id}`} className="flex-1 sm:flex-initial">
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto">
                               {language === "km" ? "ចាប់ផ្តើម" : "Start"}
                             </Button>
                           </Link>
-                          <Button size="sm" variant="ghost" onClick={() => handleRemove(quiz.id)}>
+                          <Button size="sm" variant="ghost" onClick={() => handleRemove(quiz.id)} className="flex-shrink-0">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
@@ -158,8 +158,8 @@ export default function OfflinePage() {
             {/* Available Quizzes */}
             <Card>
               <CardHeader>
-                <CardTitle>{language === "km" ? "តេស្តដែលមាន" : "Available Quizzes"}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg sm:text-xl">{language === "km" ? "តេស្តដែលមាន" : "Available Quizzes"}</CardTitle>
+                <CardDescription className="text-sm sm:text-base">
                   {language === "km" ? "ទាញយកតេស្តដើម្បីប្រើក្រៅបណ្តាញ" : "Download quizzes for offline use"}
                 </CardDescription>
               </CardHeader>
@@ -169,20 +169,20 @@ export default function OfflinePage() {
                     const downloaded = isDownloaded(quiz.id)
 
                     return (
-                      <div key={quiz.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <h3 className="font-semibold">
+                      <div key={quiz.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm sm:text-base truncate">
                             {language === "km" && quiz.titleKm ? quiz.titleKm : quiz.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {quiz.questions.length} {language === "km" ? "សំណួរ" : "questions"}
                             {quiz.timeLimit > 0 && ` • ${quiz.timeLimit} ${language === "km" ? "នាទី" : "minutes"}`}
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {downloaded ? (
-                            <Badge variant="secondary">
+                            <Badge variant="secondary" className="w-full sm:w-auto justify-center">
                               <CheckCircle2 className="h-3 w-3 mr-1" />
                               {language === "km" ? "បានទាញយក" : "Downloaded"}
                             </Badge>
@@ -192,6 +192,7 @@ export default function OfflinePage() {
                               variant="outline"
                               onClick={() => handleDownload(quiz.id)}
                               disabled={!isOnline}
+                              className="w-full sm:w-auto"
                             >
                               <Download className="h-4 w-4 mr-2" />
                               {language === "km" ? "ទាញយក" : "Download"}

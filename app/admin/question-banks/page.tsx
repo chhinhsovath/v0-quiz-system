@@ -97,9 +97,9 @@ export default function QuestionBanksPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <BackButton href="/" />
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold">{language === "km" ? "ធនាគារសំណួរ" : "Question Banks"}</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold">{language === "km" ? "ធនាគារសំណួរ" : "Question Banks"}</h1>
               <p className="text-muted-foreground">
                 {language === "km" ? "គ្រប់គ្រងបណ្តុំសំណួរដើម្បីប្រើឡើងវិញ" : "Manage reusable question pools"}
               </p>
@@ -113,12 +113,12 @@ export default function QuestionBanksPage() {
               }}
             >
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   {language === "km" ? "បង្កើតធនាគារ" : "Create Bank"}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingBank
@@ -132,7 +132,7 @@ export default function QuestionBanksPage() {
                 </DialogHeader>
 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>{language === "km" ? "ឈ្មោះ (English)" : "Name (English)"}</Label>
                       <Input

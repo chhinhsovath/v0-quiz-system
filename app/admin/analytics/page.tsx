@@ -59,20 +59,24 @@ export default function AnalyticsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <BackButton href="/" />
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">{language === "km" ? "ការវិភាគទិន្នន័យ" : "Analytics Dashboard"}</h1>
-            <p className="text-muted-foreground">
-              {language === "km" ? "របាយការណ៍លម្អិតអំពីការអនុវត្ត" : "Comprehensive performance reports"}
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold">{language === "km" ? "ការវិភាគទិន្នន័យ" : "Analytics Dashboard"}</h1>
+              <p className="text-muted-foreground">
+                {language === "km" ? "របាយការណ៍លម្អិតអំពីការអនុវត្ត" : "Comprehensive performance reports"}
+              </p>
+            </div>
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="overview">{language === "km" ? "ទិដ្ឋភាពទូទៅ" : "Overview"}</TabsTrigger>
-              <TabsTrigger value="students">{language === "km" ? "សិស្ស" : "Students"}</TabsTrigger>
-              <TabsTrigger value="questions">{language === "km" ? "សំណួរ" : "Questions"}</TabsTrigger>
-              <TabsTrigger value="comparison">{language === "km" ? "ប្រៀបធៀប" : "Comparison"}</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
+                <TabsTrigger value="overview" className="whitespace-nowrap">{language === "km" ? "ទិដ្ឋភាពទូទៅ" : "Overview"}</TabsTrigger>
+                <TabsTrigger value="students" className="whitespace-nowrap">{language === "km" ? "សិស្ស" : "Students"}</TabsTrigger>
+                <TabsTrigger value="questions" className="whitespace-nowrap">{language === "km" ? "សំណួរ" : "Questions"}</TabsTrigger>
+                <TabsTrigger value="comparison" className="whitespace-nowrap">{language === "km" ? "ប្រៀបធៀប" : "Comparison"}</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="overview" className="space-y-6">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -141,7 +145,7 @@ export default function AnalyticsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">{language === "km" ? "ថ្នាក់" : "Class"}</label>
                       <Select value={selectedClass} onValueChange={setSelectedClass}>
@@ -177,7 +181,7 @@ export default function AnalyticsPage() {
 
                   {studentAnalytics && (
                     <div className="space-y-6 mt-6">
-                      <div className="grid md:grid-cols-3 gap-4">
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <Card>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm">{language === "km" ? "ពិន្ទុមធ្យម" : "Average Score"}</CardTitle>
@@ -235,7 +239,7 @@ export default function AnalyticsPage() {
                         </Card>
                       )}
 
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
                         <Card>
                           <CardHeader>
                             <CardTitle className="text-sm flex items-center gap-2">

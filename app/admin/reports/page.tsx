@@ -87,11 +87,13 @@ export default function ReportsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <BackButton href="/" />
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">{language === "km" ? "របាយការណ៍ និងការនាំចេញ" : "Reports & Export"}</h1>
-            <p className="text-muted-foreground">
-              {language === "km" ? "នាំចេញរបាយការណ៍លម្អិតជា CSV ឬ PDF" : "Export comprehensive reports as CSV or PDF"}
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold">{language === "km" ? "របាយការណ៍ និងការនាំចេញ" : "Reports & Export"}</h1>
+              <p className="text-muted-foreground">
+                {language === "km" ? "នាំចេញរបាយការណ៍លម្អិតជា CSV ឬ PDF" : "Export comprehensive reports as CSV or PDF"}
+              </p>
+            </div>
           </div>
 
           <Tabs defaultValue="student" className="space-y-6">
@@ -112,7 +114,7 @@ export default function ReportsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
                         {language === "km" ? "ជ្រើសរើសថ្នាក់" : "Select Class"}
