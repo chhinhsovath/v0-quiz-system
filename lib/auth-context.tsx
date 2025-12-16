@@ -1,7 +1,8 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { quizStorage, type User } from "./quiz-types"
+import { quizStorage } from "./quiz-storage"
+import type { User } from "./quiz-types"
 
 interface AuthContextType {
   user: User | null
