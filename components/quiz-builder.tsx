@@ -429,10 +429,6 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
-            <Button variant="ghost" onClick={() => router.push("/admin/quizzes")} className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t.backToQuizzes}
-            </Button>
             <h1 className="text-3xl font-bold mb-2">{initialQuiz ? t.editQuiz : t.createNewQuiz}</h1>
             <p className="text-muted-foreground">
               {initialQuiz ? t.updateQuizDetailsDesc : t.buildNewQuizDesc}
@@ -681,53 +677,102 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
               </CardContent>
             </Card>
 
-            {/* Question Banks */}
-            {questionBanks.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Question Banks</CardTitle>
-                  <CardDescription>Import questions from your question banks</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Select Question Bank</Label>
-                      <Select onValueChange={addQuestionsFromBank}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a question bank..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {questionBanks.map((bank: any) => (
-                            <SelectItem key={bank.id} value={bank.id}>
-                              {bank.name} ({bank.questions?.length || 0} questions)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+            {/* Question Banks - Always Show */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>
+                      {language === "km" ? "ធនាគារសំណួរ" : "Question Banks"}
+                    </CardTitle>
+                    <CardDescription>
+                      {language === "km"
+                        ? "នាំចូលសំណួរពីធនាគារសំណួររបស់អ្នក"
+                        : "Import questions from your question banks"}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open("/admin/question-banks", "_blank")}
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    {language === "km" ? "គ្រប់គ្រងធនាគារ" : "Manage Banks"}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {questionBanks.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <Database className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <h3 className="font-semibold mb-2">
+                      {language === "km" ? "មិនទាន់មានធនាគារសំណួរ" : "No Question Banks Yet"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {language === "km"
+                        ? "បង្កើតធនាគារសំណួរដើម្បីប្រើសំណួរឡើងវិញនៅក្នុងតេស្តជាច្រើន"
+                        : "Create question banks to reuse questions across multiple quizzes"}
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/admin/question-banks")}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {language === "km" ? "បង្កើតធនាគារសំណួរ" : "Create Question Bank"}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>
+                          {language === "km" ? "ជ្រើសរើសធនាគារសំណួរ" : "Select Question Bank"}
+                        </Label>
+                        <Select onValueChange={addQuestionsFromBank}>
+                          <SelectTrigger>
+                            <SelectValue placeholder={
+                              language === "km" ? "ជ្រើសរើសធនាគារ..." : "Choose a question bank..."
+                            } />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {questionBanks.map((bank: any) => (
+                              <SelectItem key={bank.id} value={bank.id}>
+                                {language === "km" && bank.nameKm ? bank.nameKm : bank.name} ({bank.questions?.length || 0} {language === "km" ? "សំណួរ" : "questions"})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>
+                          {language === "km" ? "ទំហំបណ្តុំចៃដន្យ (0 = ទាំងអស់)" : "Random Pool Size (0 = all)"}
+                        </Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={quizData.randomPoolSize || ""}
+                          onChange={(e) => setQuizData({ ...quizData, randomPoolSize: Number.parseInt(e.target.value) || 0 })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {language === "km"
+                            ? "ប្រសិនបើបានកំណត់ នឹងជ្រើសរើសសំណួរចៃដន្យចំនួននេះពីធនាគារ"
+                            : "If set, will randomly select this many questions from the bank"}
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Random Pool Size (0 = all)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="0"
-                        value={quizData.randomPoolSize || ""}
-                        onChange={(e) => setQuizData({ ...quizData, randomPoolSize: Number.parseInt(e.target.value) || 0 })}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        If set, will randomly select this many questions from the bank
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                      <Database className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        {language === "km"
+                          ? "សំណួរដែលនាំចូលពីធនាគារនឹងត្រូវបានបន្ថែមទៅតេស្តរបស់អ្នក។ អ្នកអាចកែសម្រួលវាបានបន្ទាប់ពីនាំចូល។"
+                          : "Questions imported from banks will be added to your quiz. You can edit them individually after import."}
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                    <Database className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Questions imported from banks will be added to your quiz. You can edit them individually after import.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Questions - Compact List with Pagination */}
             <Card>
