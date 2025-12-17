@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useI18n } from "@/lib/i18n-context"
 import { NavHeader } from "@/components/nav-header"
 import { quizStorage } from "@/lib/quiz-storage"
 import type { Quiz, Question, QuestionType, Category } from "@/lib/quiz-types"
@@ -16,6 +17,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Plus, Trash2, GripVertical, MoveVertical, ImageIcon, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { ImageUpload } from "@/components/image-upload"
 
 interface QuizBuilderProps {
   initialQuiz?: Quiz
@@ -23,6 +25,7 @@ interface QuizBuilderProps {
 
 export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const { isAdmin, user } = useAuth()
+  const { t } = useI18n()
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [quizData, setQuizData] = useState({
@@ -179,11 +182,11 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
           <div className="mb-6">
             <Button variant="ghost" onClick={() => router.push("/admin/quizzes")} className="mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Quizzes
+              {t.backToQuizzes}
             </Button>
-            <h1 className="text-3xl font-bold mb-2">{initialQuiz ? "Edit Quiz" : "Create New Quiz"}</h1>
+            <h1 className="text-3xl font-bold mb-2">{initialQuiz ? t.editQuiz : t.createNewQuiz}</h1>
             <p className="text-muted-foreground">
-              {initialQuiz ? "Update your quiz details and questions" : "Build a new quiz for your students"}
+              {initialQuiz ? t.updateQuizDetailsDesc : t.buildNewQuizDesc}
             </p>
           </div>
 
@@ -191,12 +194,12 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
             {/* Quiz Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Quiz Details</CardTitle>
-                <CardDescription>Basic information about your quiz</CardDescription>
+                <CardTitle>{t.quizDetails}</CardTitle>
+                <CardDescription>{t.basicInfoDesc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Quiz Title</Label>
+                  <Label htmlFor="title">{t.quizTitle}</Label>
                   <Input
                     id="title"
                     placeholder="e.g., Chapter 1: Introduction to Biology"
@@ -206,17 +209,17 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="titleKm">Quiz Title (Km)</Label>
+                  <Label htmlFor="titleKm">{t.quizTitleKm}</Label>
                   <Input
                     id="titleKm"
-                    placeholder="e.g., Глава 1: Введение в биологию"
+                    placeholder="e.g., ជំពូកទី១៖ ការណែនាំអំពីជីវវិទ្យា"
                     value={quizData.titleKm}
                     onChange={(e) => setQuizData({ ...quizData, titleKm: e.target.value })}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t.description}</Label>
                   <Textarea
                     id="description"
                     placeholder="Brief description of what this quiz covers"
@@ -227,10 +230,10 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="descriptionKm">Description (Km)</Label>
+                  <Label htmlFor="descriptionKm">{t.descriptionKm}</Label>
                   <Textarea
                     id="descriptionKm"
-                    placeholder="Краткое описание того, что этот тест охватывает"
+                    placeholder="ការពិពណ៌នាខ្លីៗអំពីអ្វីដែលតេស្តនេះគ្របដណ្តប់"
                     value={quizData.descriptionKm}
                     onChange={(e) => setQuizData({ ...quizData, descriptionKm: e.target.value })}
                     rows={3}
@@ -238,10 +241,10 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">{t.category}</Label>
                   {categories.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No categories available. Please create a category first.
+                      {t.noCategoriesMessage}
                     </p>
                   ) : (
                     <Select
@@ -249,7 +252,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                       onValueChange={(value) => setQuizData({ ...quizData, categoryId: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder={t.selectCategory} />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
@@ -263,7 +266,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="gradeLevel">Grade Level</Label>
+                  <Label htmlFor="gradeLevel">{t.gradeLevel}</Label>
                   <Input
                     id="gradeLevel"
                     placeholder="e.g., 10th Grade"
@@ -273,7 +276,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
+                  <Label htmlFor="subject">{t.subject}</Label>
                   <Input
                     id="subject"
                     placeholder="e.g., Biology"
@@ -283,23 +286,23 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="examType">Exam Type</Label>
+                  <Label htmlFor="examType">{t.examType}</Label>
                   <Select
                     value={quizData.examType}
                     onValueChange={(value) => setQuizData({ ...quizData, examType: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select an exam type" />
+                      <SelectValue placeholder={t.selectExamType} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="regular">Regular</SelectItem>
-                      <SelectItem value="national">National Exam</SelectItem>
+                      <SelectItem value="regular">{t.regular}</SelectItem>
+                      <SelectItem value="national">{t.nationalExam}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="passingScore">Passing Score (%)</Label>
+                  <Label htmlFor="passingScore">{t.passingScore}</Label>
                   <Input
                     id="passingScore"
                     type="number"
@@ -313,8 +316,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 <div className="space-y-4 pt-2">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Certificate Enabled</Label>
-                      <p className="text-sm text-muted-foreground">Enable certificate issuance upon passing</p>
+                      <Label>{t.certificateEnabled}</Label>
+                      <p className="text-sm text-muted-foreground">{t.enableCertificateDesc}</p>
                     </div>
                     <Switch
                       checked={quizData.certificateEnabled}
@@ -324,9 +327,9 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Adaptive Testing</Label>
+                      <Label>{t.adaptiveTesting}</Label>
                       <p className="text-sm text-muted-foreground">
-                        Enable adaptive testing based on student performance
+                        {t.adaptiveTestingDesc}
                       </p>
                     </div>
                     <Switch
@@ -337,8 +340,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Max Attempts</Label>
-                      <p className="text-sm text-muted-foreground">Maximum number of attempts allowed</p>
+                      <Label>{t.maxAttempts}</Label>
+                      <p className="text-sm text-muted-foreground">{t.maxAttemptsDesc}</p>
                     </div>
                     <Input
                       type="number"
@@ -351,8 +354,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Randomize Questions</Label>
-                      <p className="text-sm text-muted-foreground">Show questions in random order for each attempt</p>
+                      <Label>{t.randomizeQuestions}</Label>
+                      <p className="text-sm text-muted-foreground">{t.randomizeQuestionsDesc}</p>
                     </div>
                     <Switch
                       checked={quizData.randomizeQuestions}
@@ -362,8 +365,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Allow Multiple Attempts</Label>
-                      <p className="text-sm text-muted-foreground">Users can retake this quiz multiple times</p>
+                      <Label>{t.allowMultipleAttempts}</Label>
+                      <p className="text-sm text-muted-foreground">{t.allowMultipleAttemptsDesc}</p>
                     </div>
                     <Switch
                       checked={quizData.allowMultipleAttempts}
@@ -373,8 +376,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Show Correct Answers</Label>
-                      <p className="text-sm text-muted-foreground">Display correct answers after completion</p>
+                      <Label>{t.showCorrectAnswers}</Label>
+                      <p className="text-sm text-muted-foreground">{t.showCorrectAnswersDesc}</p>
                     </div>
                     <Switch
                       checked={quizData.showCorrectAnswers}
@@ -390,19 +393,19 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Questions</CardTitle>
-                    <CardDescription>{questions.length} question(s) added</CardDescription>
+                    <CardTitle>{t.questions}</CardTitle>
+                    <CardDescription>{questions.length} {t.questionAdded}</CardDescription>
                   </div>
                   <Button onClick={addQuestion}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Question
+                    {t.addQuestion}
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {questions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>No questions yet. Click "Add Question" to get started.</p>
+                    <p>{t.noQuestionsMessage}</p>
                   </div>
                 ) : (
                   questions.map((question, index) => (
@@ -415,6 +418,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                       onUpdateOption={updateQuestionOption}
                       onAddOption={addOption}
                       onRemoveOption={removeOption}
+                      t={t}
                     />
                   ))
                 )}
@@ -424,11 +428,11 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
             {/* Save Button */}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => router.push("/admin/quizzes")}>
-                Cancel
+                {t.cancel}
               </Button>
               <Button onClick={handleSave}>
                 <Save className="h-4 w-4 mr-2" />
-                {initialQuiz ? "Update Quiz" : "Create Quiz"}
+                {initialQuiz ? t.updateQuiz : t.create + " " + t.quiz}
               </Button>
             </div>
           </div>
@@ -446,6 +450,7 @@ interface QuestionEditorProps {
   onUpdateOption: (questionId: string, optionIndex: number, value: string) => void
   onAddOption: (questionId: string) => void
   onRemoveOption: (questionId: string, optionIndex: number) => void
+  t: any
 }
 
 function QuestionEditor({
@@ -456,6 +461,7 @@ function QuestionEditor({
   onUpdateOption,
   onAddOption,
   onRemoveOption,
+  t,
 }: QuestionEditorProps) {
   const handleTypeChange = (type: QuestionType) => {
     let options: string[] | undefined
@@ -522,23 +528,23 @@ function QuestionEditor({
           <div className="flex items-center gap-2">
             <GripVertical className="h-5 w-5 text-muted-foreground" />
             <div>
-              <h3 className="font-semibold">Question {index + 1}</h3>
+              <h3 className="font-semibold">{t.question} {index + 1}</h3>
               <Select value={question.type} onValueChange={handleTypeChange}>
                 <SelectTrigger className="w-[200px] mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
-                  <SelectItem value="multiple-select">Multiple Select</SelectItem>
-                  <SelectItem value="true-false">True/False</SelectItem>
-                  <SelectItem value="short-answer">Short Answer</SelectItem>
-                  <SelectItem value="fill-blanks">Fill in the Blanks</SelectItem>
-                  <SelectItem value="drag-drop">Drag & Drop</SelectItem>
-                  <SelectItem value="matching">Matching</SelectItem>
-                  <SelectItem value="ordering">Ordering/Sequence</SelectItem>
-                  <SelectItem value="essay">Essay</SelectItem>
-                  <SelectItem value="image-choice">Image Choice</SelectItem>
-                  <SelectItem value="hotspot">Image Hotspot</SelectItem>
+                  <SelectItem value="multiple-choice">{t.multipleChoice}</SelectItem>
+                  <SelectItem value="multiple-select">{t.multipleSelect}</SelectItem>
+                  <SelectItem value="true-false">{t.trueFalse}</SelectItem>
+                  <SelectItem value="short-answer">{t.shortAnswer}</SelectItem>
+                  <SelectItem value="fill-blanks">{t.fillBlanks}</SelectItem>
+                  <SelectItem value="drag-drop">{t.dragDrop}</SelectItem>
+                  <SelectItem value="matching">{t.matching}</SelectItem>
+                  <SelectItem value="ordering">{t.ordering}</SelectItem>
+                  <SelectItem value="essay">{t.essay}</SelectItem>
+                  <SelectItem value="image-choice">{t.imageChoice}</SelectItem>
+                  <SelectItem value="hotspot">{t.hotspot}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -555,7 +561,7 @@ function QuestionEditor({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label>Question Text</Label>
+          <Label>{t.questionText}</Label>
           <Textarea
             placeholder="Enter your question here"
             value={question.question}
@@ -565,7 +571,7 @@ function QuestionEditor({
         </div>
 
         <div className="space-y-2">
-          <Label>Points</Label>
+          <Label>{t.points}</Label>
           <Input
             type="number"
             min="1"
@@ -578,7 +584,7 @@ function QuestionEditor({
         {/* Multiple Choice */}
         {question.type === "multiple-choice" && question.options && (
           <div className="space-y-3">
-            <Label>Answer Options (select the correct one)</Label>
+            <Label>{t.answerOptions} ({t.selectCorrectAnswer})</Label>
             <RadioGroup
               value={question.correctAnswer as string}
               onValueChange={(value) => onUpdate(question.id, { correctAnswer: value })}
@@ -607,7 +613,7 @@ function QuestionEditor({
             </RadioGroup>
             <Button variant="outline" size="sm" onClick={() => onAddOption(question.id)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Option
+              {t.addOption}
             </Button>
           </div>
         )}
@@ -615,7 +621,7 @@ function QuestionEditor({
         {/* Multiple Select */}
         {question.type === "multiple-select" && question.options && (
           <div className="space-y-3">
-            <Label>Answer Options (select all correct answers)</Label>
+            <Label>{t.answerOptions} ({t.selectAllCorrectAnswers})</Label>
             <div className="space-y-2">
               {question.options.map((option, optIndex) => (
                 <div key={optIndex} className="flex items-center gap-2">
@@ -651,7 +657,7 @@ function QuestionEditor({
             </div>
             <Button variant="outline" size="sm" onClick={() => onAddOption(question.id)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Option
+              {t.addOption}
             </Button>
           </div>
         )}
@@ -659,7 +665,7 @@ function QuestionEditor({
         {/* True/False */}
         {question.type === "true-false" && question.options && (
           <div className="space-y-2">
-            <Label>Correct Answer</Label>
+            <Label>{t.correctAnswerLabel}</Label>
             <RadioGroup
               value={question.correctAnswer as string}
               onValueChange={(value) => onUpdate(question.id, { correctAnswer: value })}
@@ -679,20 +685,20 @@ function QuestionEditor({
         {/* Short Answer */}
         {question.type === "short-answer" && (
           <div className="space-y-2">
-            <Label>Correct Answer</Label>
+            <Label>{t.correctAnswerLabel}</Label>
             <Input
-              placeholder="Enter the correct answer"
+              placeholder={t.enterCorrectAnswer}
               value={question.correctAnswer as string}
               onChange={(e) => onUpdate(question.id, { correctAnswer: e.target.value })}
             />
-            <p className="text-xs text-muted-foreground">Answer matching is case-insensitive</p>
+            <p className="text-xs text-muted-foreground">{t.answerMatchingCaseInsensitive}</p>
           </div>
         )}
 
         {question.type === "fill-blanks" && (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Template (use ___ for blanks)</Label>
+              <Label>{t.templateUseBlanks}</Label>
               <Textarea
                 placeholder="The capital of France is ___. It has a population of over ___ million."
                 value={question.blanksTemplate || ""}
@@ -711,11 +717,11 @@ function QuestionEditor({
                 }}
                 rows={3}
               />
-              <p className="text-xs text-muted-foreground">{question.blanksCount || 0} blank(s) detected</p>
+              <p className="text-xs text-muted-foreground">{question.blanksCount || 0} {t.blanksDetected}</p>
             </div>
             {question.blanksCount && question.blanksCount > 0 && (
               <div className="space-y-2">
-                <Label>Correct Answers (in order)</Label>
+                <Label>{t.correctAnswersInOrder}</Label>
                 {Array.from({ length: question.blanksCount }).map((_, index) => (
                   <Input
                     key={index}
@@ -728,7 +734,7 @@ function QuestionEditor({
                     }}
                   />
                 ))}
-                <p className="text-xs text-muted-foreground">Matching is case-insensitive</p>
+                <p className="text-xs text-muted-foreground">{t.answerMatchingCaseInsensitive}</p>
               </div>
             )}
           </div>
@@ -736,7 +742,7 @@ function QuestionEditor({
 
         {question.type === "drag-drop" && question.options && (
           <div className="space-y-3">
-            <Label>Items (will be shuffled for students)</Label>
+            <Label>{t.itemsWillBeShuffled}</Label>
             <div className="space-y-2">
               {question.options.map((option, optIndex) => (
                 <div key={optIndex} className="flex items-center gap-2">
@@ -762,12 +768,12 @@ function QuestionEditor({
             </div>
             <Button variant="outline" size="sm" onClick={() => onAddOption(question.id)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Item
+              {t.addOption}
             </Button>
             <div className="space-y-2 pt-2">
-              <Label>Correct Order (drag items in order above, or enter indices)</Label>
+              <Label>{t.correctAnswersInOrder}</Label>
               <p className="text-xs text-muted-foreground">
-                Students will arrange items in this order. Leave as is to use current order.
+                {t.correctOrderDesc}
               </p>
             </div>
           </div>
@@ -775,7 +781,7 @@ function QuestionEditor({
 
         {question.type === "matching" && question.pairs && (
           <div className="space-y-3">
-            <Label>Matching Pairs</Label>
+            <Label>{t.matchingPairs}</Label>
             {question.pairs.map((pair, pairIndex) => (
               <div key={pairIndex} className="flex items-center gap-2">
                 <Input
@@ -823,16 +829,16 @@ function QuestionEditor({
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Pair
+              {t.addOption}
             </Button>
-            <p className="text-xs text-muted-foreground">Right side will be shuffled for students to match</p>
+            <p className="text-xs text-muted-foreground">{t.rightSideShuffled}</p>
           </div>
         )}
 
         {question.type === "ordering" && question.options && (
           <div className="space-y-3">
-            <Label>Items in Correct Order</Label>
-            <p className="text-xs text-muted-foreground">Enter items in the correct sequence from first to last</p>
+            <Label>{t.itemsInCorrectOrder}</Label>
+            <p className="text-xs text-muted-foreground">{t.enterItemsInSequence}</p>
             <div className="space-y-2">
               {question.options.map((option, optIndex) => (
                 <div key={optIndex} className="flex items-center gap-2">
@@ -858,7 +864,7 @@ function QuestionEditor({
             </div>
             <Button variant="outline" size="sm" onClick={() => onAddOption(question.id)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Step
+              {t.addOption}
             </Button>
           </div>
         )}
@@ -867,19 +873,18 @@ function QuestionEditor({
           <div className="space-y-3">
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Essay questions require manual grading by the instructor. Students will have a text area to write their
-                response.
+                {t.essayManualGrading}
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Sample Answer / Grading Rubric (optional)</Label>
+              <Label>{t.sampleAnswerRubric}</Label>
               <Textarea
                 placeholder="Enter a sample answer or grading criteria for reference"
                 value={question.correctAnswer as string}
                 onChange={(e) => onUpdate(question.id, { correctAnswer: e.target.value })}
                 rows={4}
               />
-              <p className="text-xs text-muted-foreground">This will only be visible to instructors</p>
+              <p className="text-xs text-muted-foreground">{t.sampleAnswerForInstructors}</p>
             </div>
           </div>
         )}
@@ -887,29 +892,14 @@ function QuestionEditor({
         {question.type === "image-choice" && question.options && (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Image URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="https://example.com/image.jpg"
-                  value={question.imageUrl || ""}
-                  onChange={(e) => onUpdate(question.id, { imageUrl: e.target.value })}
-                  className="flex-1"
-                />
-                <Button variant="outline" size="sm">
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-              </div>
+              <Label>{t.imageUrl || "Question Image"}</Label>
+              <ImageUpload
+                value={question.imageUrl || ""}
+                onChange={(imageUrl) => onUpdate(question.id, { imageUrl })}
+                maxSizeMB={5}
+              />
             </div>
-            {question.imageUrl && (
-              <div className="border rounded-lg p-2">
-                <img
-                  src={question.imageUrl || "/placeholder.svg"}
-                  alt="Question"
-                  className="w-full max-h-64 object-contain"
-                />
-              </div>
-            )}
-            <Label>Answer Options (select the correct one)</Label>
+            <Label>{t.answerOptions} ({t.selectCorrectAnswer})</Label>
             <RadioGroup
               value={question.correctAnswer as string}
               onValueChange={(value) => onUpdate(question.id, { correctAnswer: value })}
@@ -938,7 +928,7 @@ function QuestionEditor({
             </RadioGroup>
             <Button variant="outline" size="sm" onClick={() => onAddOption(question.id)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Option
+              {t.addOption}
             </Button>
           </div>
         )}
@@ -946,30 +936,20 @@ function QuestionEditor({
         {question.type === "hotspot" && (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Image URL</Label>
-              <Input
-                placeholder="https://example.com/image.jpg"
+              <Label>{t.imageUrl || "Hotspot Image"}</Label>
+              <ImageUpload
                 value={question.imageUrl || ""}
-                onChange={(e) => onUpdate(question.id, { imageUrl: e.target.value })}
+                onChange={(imageUrl) => onUpdate(question.id, { imageUrl })}
+                maxSizeMB={5}
               />
             </div>
-            {question.imageUrl && (
-              <div className="border rounded-lg p-2">
-                <img
-                  src={question.imageUrl || "/placeholder.svg"}
-                  alt="Hotspot"
-                  className="w-full max-h-64 object-contain"
-                />
-              </div>
-            )}
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Image hotspot questions let students click on specific areas of an image. Define correct clickable areas
-                below.
+                {t.imageHotspotDesc}
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Hotspots (clickable areas)</Label>
+              <Label>{t.hotspotsClickableAreas}</Label>
               {question.hotspots && question.hotspots.length > 0 ? (
                 <div className="space-y-2">
                   {question.hotspots.map((hotspot, index) => (
@@ -999,7 +979,7 @@ function QuestionEditor({
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No hotspots defined yet</p>
+                <p className="text-sm text-muted-foreground">{t.noHotspotsYet}</p>
               )}
               <Button
                 variant="outline"
@@ -1013,16 +993,16 @@ function QuestionEditor({
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Hotspot
+                {t.addHotspot}
               </Button>
             </div>
           </div>
         )}
 
         <div className="space-y-2 pt-2 border-t">
-          <Label>Explanation (optional)</Label>
+          <Label>{t.explanationOptional}</Label>
           <Textarea
-            placeholder="Provide additional context or explanation that will be shown after answering"
+            placeholder={t.explanationAfterAnswer}
             value={question.explanation || ""}
             onChange={(e) => onUpdate(question.id, { explanation: e.target.value })}
             rows={2}
