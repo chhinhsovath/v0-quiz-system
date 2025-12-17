@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Clock, CheckCircle2, XCircle, AlertCircle, MoveVertical } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function TakeQuizPage() {
   const params = useParams()
@@ -32,6 +31,8 @@ export default function TakeQuizPage() {
 
   const [draggedItem, setDraggedItem] = useState<string | null>(null)
   const [orderedItems, setOrderedItems] = useState<Record<string, string[]>>({})
+  const [draggedMatchItem, setDraggedMatchItem] = useState<string | null>(null)
+  const [availableMatches, setAvailableMatches] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
     if (!user) {
@@ -63,6 +64,18 @@ export default function TakeQuizPage() {
 
     setQuestions(quizQuestions)
     setStartTime(new Date())
+
+    // Initialize available matches for matching questions
+    const matchesMap: Record<string, string[]> = {}
+    quizQuestions.forEach((question) => {
+      if (question.type === "matching" && question.pairs) {
+        // Randomize right items for each matching question
+        matchesMap[question.id] = [...question.pairs]
+          .map(p => p.right)
+          .sort(() => Math.random() - 0.5)
+      }
+    })
+    setAvailableMatches(matchesMap)
 
     if (foundQuiz.timeLimit > 0) {
       setTimeRemaining(foundQuiz.timeLimit * 60) // Convert to seconds
@@ -485,35 +498,108 @@ export default function TakeQuizPage() {
                   )}
 
                   {question.type === "matching" && question.pairs && (
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Match each item on the left with its pair</p>
-                      <div className="space-y-2">
-                        {question.pairs.map((pair, pairIdx) => (
-                          <div key={pairIdx} className="flex items-center gap-2">
-                            <div className="flex-1 p-2 bg-muted rounded">{pair.left}</div>
-                            <span className="text-muted-foreground">→</span>
-                            <Select
-                              value={(answers[question.id] as Record<string, string>)?.[pair.left] || ""}
-                              onValueChange={(value) => {
-                                const currentPairs = (answers[question.id] as Record<string, string>) || {}
-                                handleAnswerChange(question.id, { ...currentPairs, [pair.left]: value })
-                              }}
-                            >
-                              <SelectTrigger className="flex-1">
-                                <SelectValue placeholder="Select match" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {[...question.pairs]
-                                  .sort(() => Math.random() - 0.5)
-                                  .map((p, idx) => (
-                                    <SelectItem key={idx} value={p.right}>
-                                      {p.right}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                    <div className="space-y-4">
+                      <p className="text-sm sm:text-base text-muted-foreground">
+                        Drag items from the right and drop them onto the matching items on the left
+                      </p>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Left side - Items to match */}
+                        <div className="space-y-3">
+                          <h4 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">Items to Match</h4>
+                          {question.pairs.map((pair, pairIdx) => {
+                            const currentMatches = (answers[question.id] as Record<string, string>) || {}
+                            const matchedValue = currentMatches[pair.left]
+
+                            return (
+                              <div
+                                key={pairIdx}
+                                className="relative"
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => {
+                                  if (!draggedMatchItem) return
+                                  const currentPairs = (answers[question.id] as Record<string, string>) || {}
+
+                                  // Remove the item from available matches
+                                  const newAvailable = availableMatches[question.id].filter(item => item !== draggedMatchItem)
+
+                                  // If there was already a match, return it to available
+                                  if (currentPairs[pair.left]) {
+                                    newAvailable.push(currentPairs[pair.left])
+                                  }
+
+                                  setAvailableMatches({ ...availableMatches, [question.id]: newAvailable })
+                                  handleAnswerChange(question.id, { ...currentPairs, [pair.left]: draggedMatchItem })
+                                  setDraggedMatchItem(null)
+                                }}
+                              >
+                                <div className={`p-3 sm:p-4 rounded-lg border-2 transition-all min-h-[64px] ${
+                                  matchedValue
+                                    ? 'bg-green-50 dark:bg-green-950/20 border-green-500'
+                                    : 'bg-muted border-dashed border-muted-foreground/30 hover:border-primary'
+                                }`}>
+                                  <p className="font-medium text-sm sm:text-base">{pair.left}</p>
+                                  {matchedValue && (
+                                    <div className="mt-2 flex items-center justify-between">
+                                      <p className="text-xs sm:text-sm text-green-700 dark:text-green-400 flex items-center gap-2">
+                                        <span>→</span>
+                                        <span className="font-semibold">{matchedValue}</span>
+                                      </p>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 hover:bg-destructive/20"
+                                        onClick={() => {
+                                          const currentPairs = { ...currentMatches }
+                                          delete currentPairs[pair.left]
+
+                                          // Return item to available
+                                          const newAvailable = [...availableMatches[question.id], matchedValue]
+                                            .sort(() => Math.random() - 0.5)
+                                          setAvailableMatches({ ...availableMatches, [question.id]: newAvailable })
+
+                                          handleAnswerChange(question.id, currentPairs)
+                                        }}
+                                      >
+                                        <XCircle className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {/* Right side - Available matches */}
+                        <div className="space-y-3">
+                          <h4 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                            Drag to Match ({availableMatches[question.id]?.length || 0} remaining)
+                          </h4>
+                          <div className="space-y-2">
+                            {(availableMatches[question.id] || []).map((item, idx) => (
+                              <div
+                                key={idx}
+                                draggable
+                                onDragStart={() => setDraggedMatchItem(item)}
+                                onDragEnd={() => setDraggedMatchItem(null)}
+                                className={`p-3 sm:p-4 rounded-lg border-2 cursor-move transition-all min-h-[64px] flex items-center ${
+                                  draggedMatchItem === item
+                                    ? 'opacity-50 border-primary scale-95'
+                                    : 'bg-blue-50 dark:bg-blue-950/20 border-blue-500 hover:scale-105 hover:shadow-md'
+                                }`}
+                              >
+                                <MoveVertical className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
+                                <span className="text-sm sm:text-base font-medium">{item}</span>
+                              </div>
+                            ))}
+                            {availableMatches[question.id]?.length === 0 && (
+                              <div className="p-4 text-center text-muted-foreground text-sm rounded-lg border-2 border-dashed">
+                                All items have been matched!
+                              </div>
+                            )}
                           </div>
-                        ))}
+                        </div>
                       </div>
                     </div>
                   )}
