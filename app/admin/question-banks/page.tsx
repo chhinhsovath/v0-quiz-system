@@ -41,8 +41,10 @@ export default function QuestionBanksPage() {
     try {
       setLoading(true)
       const allBanks = await quizStorage.getQuestionBanks()
-      // Filter banks created by user or shared with user
-      const filtered = allBanks.filter((b) => b.createdBy === user?.id || b.sharedWith.includes(user?.id || ""))
+      // Admins see all banks, teachers see only their own or shared banks
+      const filtered = isAdmin
+        ? allBanks
+        : allBanks.filter((b) => b.createdBy === user?.id || b.sharedWith.includes(user?.id || ""))
       setBanks(filtered)
     } catch (error) {
       console.error('Error loading question banks:', error)
