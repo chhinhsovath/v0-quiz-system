@@ -7,10 +7,11 @@ import { supabase } from '@/lib/supabase'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const attemptId = params.id
+    const { id } = await params
+    const attemptId = id
 
     // Fetch attempt with quiz and user data
     const { data: attempt, error } = await supabase
