@@ -287,7 +287,7 @@ export function QuestionTypeSelector({ value, onChange, t }: QuestionTypeSelecto
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
       {questionTypes.map((qt) => {
         const Icon = qt.icon
         const isSelected = selectedType === qt.type
@@ -305,17 +305,17 @@ export function QuestionTypeSelector({ value, onChange, t }: QuestionTypeSelecto
             )}
             onClick={() => handleSelect(qt.type)}
           >
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-6 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    "p-2 rounded-lg",
+                    "p-3 rounded-lg",
                     isSelected
                       ? "bg-blue-500 text-white"
                       : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
                   )}>
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-6 w-6" />
                   </div>
                   {isSelected && (
                     <CheckCircle2 className="h-5 w-5 text-blue-500" />
@@ -332,18 +332,18 @@ export function QuestionTypeSelector({ value, onChange, t }: QuestionTypeSelecto
               {/* Title */}
               <div>
                 <h3 className={cn(
-                  "font-semibold text-sm mb-1",
+                  "font-semibold text-base mb-1.5",
                   isSelected && "text-blue-700 dark:text-blue-400"
                 )}>
                   {title}
                 </h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">
+                <p className="text-sm text-muted-foreground line-clamp-2">
                   {qt.description}
                 </p>
               </div>
 
               {/* Preview */}
-              <div className="bg-white dark:bg-gray-950 p-3 rounded-lg border">
+              <div className="bg-white dark:bg-gray-950 p-4 rounded-lg border min-h-[120px] flex items-center justify-center">
                 {qt.preview}
               </div>
             </CardContent>

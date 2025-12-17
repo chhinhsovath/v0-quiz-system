@@ -768,7 +768,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
             <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
               if (!open) cancelQuestionEdit()
             }}>
-              <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto">
+              <DialogContent className="max-w-[99vw] w-[99vw] max-h-[99vh] h-[99vh] overflow-y-auto p-8">
                 <DialogHeader>
                   <DialogTitle className="text-2xl">
                     {showTypeSelector
@@ -784,9 +784,9 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                   )}
                 </DialogHeader>
 
-                <div className="min-h-[60vh]">
+                <div className="min-h-[80vh]">
                   {showTypeSelector && editingQuestion ? (
-                    <div className="py-6">
+                    <div className="py-8">
                       <QuestionTypeSelector
                         value={editingQuestion.type}
                         onChange={(type) => {
