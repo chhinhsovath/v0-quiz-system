@@ -466,6 +466,37 @@ function renderQuestionInput(
         </div>
       )
 
+    case 'image-choice':
+      // Image-based multiple choice (basic support with radio buttons)
+      return (
+        <RadioGroup value={answer || ''} onValueChange={(val) => onChange(question.id, val)}>
+          {options?.map((option, idx) => (
+            <div key={idx} className="flex items-center space-x-2 mb-2">
+              <RadioGroupItem value={option} id={`${question.id}-${idx}`} />
+              <Label htmlFor={`${question.id}-${idx}`} className="cursor-pointer">{option}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+      )
+
+    case 'hotspot':
+      // Hotspot clicking on image (basic support with text input)
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            {language === 'km'
+              ? 'ចុចលើតំបន់ត្រឹមត្រូវនៅលើរូបភាព'
+              : 'Click on the correct area on the image'}
+          </p>
+          <Textarea
+            value={answer || ''}
+            onChange={(e) => onChange(question.id, e.target.value)}
+            placeholder={language === 'km' ? 'បញ្ចូលចម្លើយរបស់អ្នក...' : 'Enter your answer...'}
+            rows={3}
+          />
+        </div>
+      )
+
     default:
       return (
         <div className="text-muted-foreground">
