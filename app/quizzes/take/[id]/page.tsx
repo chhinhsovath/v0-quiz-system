@@ -14,9 +14,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Clock, CheckCircle2, AlertCircle, Loader2, Eye } from "lucide-react"
+import { Clock, CheckCircle2, AlertCircle, Loader2, Eye, GripVertical, Image as ImageIcon } from "lucide-react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
+import Image from "next/image"
 
 export default function TakeQuizPage() {
   const params = useParams()
@@ -421,6 +422,40 @@ function renderQuestionInput(
 
     case 'fill-blank':
     case 'fill-blanks':
+      // If question has blanksTemplate, parse it and create multiple inputs
+      if (question.blanksTemplate || question.blanksCount) {
+        const template = language === 'km' && question.blanksTemplateKm
+          ? question.blanksTemplateKm
+          : question.blanksTemplate
+        const blanksCount = question.blanksCount || 1
+        const currentAnswers = answer || {}
+
+        return (
+          <div className="space-y-3">
+            {template && (
+              <p className="text-sm mb-2">{template}</p>
+            )}
+            <div className="space-y-2">
+              {Array.from({ length: blanksCount }, (_, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <Label className="w-24 text-sm">
+                    {language === 'km' ? 'ចន្លោះ' : 'Blank'} {idx + 1}:
+                  </Label>
+                  <Input
+                    value={currentAnswers[`blank${idx + 1}`] || ''}
+                    onChange={(e) => {
+                      const newAnswers = { ...currentAnswers, [`blank${idx + 1}`]: e.target.value }
+                      onChange(question.id, newAnswers)
+                    }}
+                    placeholder={language === 'km' ? 'បំពេញចម្លើយ' : 'Fill answer'}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      }
+      // Single blank
       return (
         <Input
           value={answer || ''}
@@ -430,7 +465,48 @@ function renderQuestionInput(
       )
 
     case 'matching':
-      // Simple text-based matching (for basic support)
+      // Matching pairs with dropdowns
+      if (question.pairs && question.pairs.length > 0) {
+        const currentMatches = answer || {}
+        const leftItems = question.pairs.map(p => language === 'km' && p.leftKm ? p.leftKm : p.left)
+        const rightItems = question.pairs.map(p => language === 'km' && p.rightKm ? p.rightKm : p.right)
+
+        // Shuffle right items for display
+        const shuffledRightItems = [...rightItems].sort(() => Math.random() - 0.5)
+
+        return (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground mb-3">
+              {language === 'km'
+                ? 'ផ្គូផ្គងធាតុខាងឆ្វេងជាមួយធាតុខាងស្តាំ'
+                : 'Match items on the left with items on the right'}
+            </p>
+            {leftItems.map((leftItem, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <div className="flex-1 p-2 bg-muted rounded">{leftItem}</div>
+                <span className="text-muted-foreground">→</span>
+                <select
+                  className="flex-1 p-2 border rounded"
+                  value={currentMatches[leftItem] || ''}
+                  onChange={(e) => {
+                    onChange(question.id, { ...currentMatches, [leftItem]: e.target.value })
+                  }}
+                >
+                  <option value="">
+                    {language === 'km' ? 'ជ្រើសរើស...' : 'Select...'}
+                  </option>
+                  {shuffledRightItems.map((rightItem, ridx) => (
+                    <option key={ridx} value={rightItem}>
+                      {rightItem}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        )
+      }
+      // Fallback to text input
       return (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
@@ -449,7 +525,54 @@ function renderQuestionInput(
 
     case 'ordering':
     case 'drag-drop':
-      // Simple text-based ordering (for basic support)
+      // Draggable ordering list
+      if (options && options.length > 0) {
+        const currentOrder = answer || [...options]
+
+        const moveItem = (fromIndex: number, toIndex: number) => {
+          const newOrder = [...currentOrder]
+          const [movedItem] = newOrder.splice(fromIndex, 1)
+          newOrder.splice(toIndex, 0, movedItem)
+          onChange(question.id, newOrder)
+        }
+
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground mb-3">
+              {language === 'km'
+                ? 'ចុចលើធាតុហើយប្រើប៊ូតុងឡើងលើ/ចុះក្រោមដើម្បីរៀបចំ'
+                : 'Click on items and use up/down buttons to arrange'}
+            </p>
+            {currentOrder.map((item: string, idx: number) => (
+              <div key={idx} className="flex items-center gap-2 p-3 bg-muted rounded">
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={() => idx > 0 && moveItem(idx, idx - 1)}
+                    disabled={idx === 0}
+                    className="text-xs hover:bg-background p-1 rounded disabled:opacity-30"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => idx < currentOrder.length - 1 && moveItem(idx, idx + 1)}
+                    disabled={idx === currentOrder.length - 1}
+                    className="text-xs hover:bg-background p-1 rounded disabled:opacity-30"
+                  >
+                    ▼
+                  </button>
+                </div>
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="font-semibold text-muted-foreground">{idx + 1}.</span>
+                  <span>{item}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+      // Fallback
       return (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
@@ -467,33 +590,79 @@ function renderQuestionInput(
       )
 
     case 'image-choice':
-      // Image-based multiple choice (basic support with radio buttons)
+      // Image with radio button options
       return (
-        <RadioGroup value={answer || ''} onValueChange={(val) => onChange(question.id, val)}>
-          {options?.map((option, idx) => (
-            <div key={idx} className="flex items-center space-x-2 mb-2">
-              <RadioGroupItem value={option} id={`${question.id}-${idx}`} />
-              <Label htmlFor={`${question.id}-${idx}`} className="cursor-pointer">{option}</Label>
+        <div className="space-y-4">
+          {question.imageUrl && (
+            <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden">
+              <Image
+                src={question.imageUrl}
+                alt="Question image"
+                fill
+                className="object-contain"
+              />
             </div>
-          ))}
-        </RadioGroup>
+          )}
+          <RadioGroup value={answer || ''} onValueChange={(val) => onChange(question.id, val)}>
+            {options?.map((option, idx) => (
+              <div key={idx} className="flex items-center space-x-2 mb-2">
+                <RadioGroupItem value={option} id={`${question.id}-${idx}`} />
+                <Label htmlFor={`${question.id}-${idx}`} className="cursor-pointer">{option}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
       )
 
     case 'hotspot':
-      // Hotspot clicking on image (basic support with text input)
+      // Clickable image hotspots
       return (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {language === 'km'
               ? 'ចុចលើតំបន់ត្រឹមត្រូវនៅលើរូបភាព'
               : 'Click on the correct area on the image'}
           </p>
-          <Textarea
-            value={answer || ''}
-            onChange={(e) => onChange(question.id, e.target.value)}
-            placeholder={language === 'km' ? 'បញ្ចូលចម្លើយរបស់អ្នក...' : 'Enter your answer...'}
-            rows={3}
-          />
+          {question.imageUrl && (
+            <div className="relative w-full h-96 bg-muted rounded-lg overflow-hidden border-2">
+              <Image
+                src={question.imageUrl}
+                alt="Hotspot question"
+                fill
+                className="object-contain"
+              />
+              {question.hotspots?.map((hotspot, idx) => {
+                const label = language === 'km' && hotspot.labelKm ? hotspot.labelKm : hotspot.label
+                const isSelected = answer === label
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => onChange(question.id, label)}
+                    className={`absolute w-8 h-8 rounded-full border-2 transition-all ${
+                      isSelected
+                        ? 'bg-primary border-primary'
+                        : 'bg-white/50 border-white hover:bg-white/80'
+                    }`}
+                    style={{
+                      left: `${hotspot.x}%`,
+                      top: `${hotspot.y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
+                    title={label}
+                  />
+                )
+              })}
+            </div>
+          )}
+          {answer && (
+            <div className="p-3 bg-muted rounded">
+              <span className="text-sm">
+                {language === 'km' ? 'បានជ្រើសរើស: ' : 'Selected: '}
+                <strong>{answer}</strong>
+              </span>
+            </div>
+          )}
         </div>
       )
 
