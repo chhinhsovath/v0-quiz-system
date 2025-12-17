@@ -18,6 +18,7 @@ export default function QuizzesPage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [attempts, setAttempts] = useState<QuizAttempt[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) {
@@ -27,11 +28,23 @@ export default function QuizzesPage() {
     loadData()
   }, [user, router])
 
-  const loadData = () => {
-    setQuizzes(quizStorage.getQuizzes())
-    setCategories(quizStorage.getCategories())
-    if (user) {
-      setAttempts(quizStorage.getUserAttempts(user.id))
+  const loadData = async () => {
+    if (!user) return
+
+    try {
+      setLoading(true)
+      const [quizzesData, categoriesData, attemptsData] = await Promise.all([
+        quizStorage.getQuizzes(),
+        quizStorage.getCategories(),
+        quizStorage.getUserAttempts(user.id)
+      ])
+      setQuizzes(quizzesData)
+      setCategories(categoriesData)
+      setAttempts(attemptsData)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -68,7 +81,16 @@ export default function QuizzesPage() {
             <p className="text-sm sm:text-base text-muted-foreground">Browse quizzes and test your knowledge</p>
           </div>
 
-          {quizzes.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading quizzes...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : quizzes.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />

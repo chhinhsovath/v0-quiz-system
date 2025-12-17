@@ -34,39 +34,22 @@ export const quizStorage = {
     console.warn('saveCategories is deprecated with Supabase')
   },
 
-  addCategory: async (category: Partial<Category>) => {
-    const insertData: any = {
-      name: category.name,
-      name_km: category.nameKm,
-      description: category.description,
-      description_km: category.descriptionKm,
-      icon: category.icon
-    }
-
-    // Only include ID if it's provided (for backwards compatibility)
-    if (category.id) {
-      insertData.id = category.id
-    }
-
-    const { data, error } = await supabase
+  addCategory: async (category: Category) => {
+    const { error } = await supabase
       .from('categories')
-      .insert(insertData)
-      .select()
-      .single()
+      .insert({
+        id: category.id,
+        name: category.name,
+        name_km: category.nameKm,
+        description: category.description,
+        description_km: category.descriptionKm,
+        icon: category.icon
+      })
 
     if (error) {
       console.error('Error adding category:', error)
       throw error
     }
-
-    return data ? {
-      id: data.id,
-      name: data.name,
-      nameKm: data.name_km,
-      description: data.description,
-      descriptionKm: data.description_km,
-      icon: data.icon
-    } : null
   },
 
   updateCategory: async (id: string, updates: Partial<Category>) => {
@@ -140,66 +123,35 @@ export const quizStorage = {
     console.warn('saveQuizzes is deprecated with Supabase')
   },
 
-  addQuiz: async (quiz: Partial<Quiz>) => {
-    const insertData: any = {
-      title: quiz.title,
-      title_km: quiz.titleKm,
-      description: quiz.description,
-      description_km: quiz.descriptionKm,
-      category_id: quiz.categoryId,
-      created_by: quiz.createdBy,
-      grade_level: quiz.gradeLevel,
-      subject: quiz.subject,
-      exam_type: quiz.examType,
-      passing_score: quiz.passingScore,
-      certificate_enabled: quiz.certificateEnabled,
-      adaptive_testing: quiz.adaptiveTesting,
-      max_attempts: quiz.maxAttempts,
-      time_limit: quiz.timeLimit,
-      randomize_questions: quiz.randomizeQuestions,
-      allow_multiple_attempts: quiz.allowMultipleAttempts,
-      show_correct_answers: quiz.showCorrectAnswers,
-      questions: quiz.questions
-    }
-
-    // Only include ID if it's provided (for backwards compatibility)
-    if (quiz.id) {
-      insertData.id = quiz.id
-    }
-
-    const { data, error } = await supabase
+  addQuiz: async (quiz: Quiz) => {
+    const { error } = await supabase
       .from('quizzes')
-      .insert(insertData)
-      .select()
-      .single()
+      .insert({
+        id: quiz.id,
+        title: quiz.title,
+        title_km: quiz.titleKm,
+        description: quiz.description,
+        description_km: quiz.descriptionKm,
+        category_id: quiz.categoryId,
+        created_by: quiz.createdBy,
+        grade_level: quiz.gradeLevel,
+        subject: quiz.subject,
+        exam_type: quiz.examType,
+        passing_score: quiz.passingScore,
+        certificate_enabled: quiz.certificateEnabled,
+        adaptive_testing: quiz.adaptiveTesting,
+        max_attempts: quiz.maxAttempts,
+        time_limit: quiz.timeLimit,
+        randomize_questions: quiz.randomizeQuestions,
+        allow_multiple_attempts: quiz.allowMultipleAttempts,
+        show_correct_answers: quiz.showCorrectAnswers,
+        questions: quiz.questions
+      })
 
     if (error) {
       console.error('Error adding quiz:', error)
       throw error
     }
-
-    return data ? {
-      id: data.id,
-      title: data.title,
-      titleKm: data.title_km,
-      description: data.description,
-      descriptionKm: data.description_km,
-      categoryId: data.category_id,
-      createdBy: data.created_by,
-      gradeLevel: data.grade_level,
-      subject: data.subject,
-      examType: data.exam_type,
-      passingScore: data.passing_score,
-      certificateEnabled: data.certificate_enabled,
-      adaptiveTesting: data.adaptive_testing,
-      maxAttempts: data.max_attempts,
-      timeLimit: data.time_limit,
-      randomizeQuestions: data.randomize_questions,
-      allowMultipleAttempts: data.allow_multiple_attempts,
-      showCorrectAnswers: data.show_correct_answers,
-      questions: data.questions,
-      createdAt: data.created_at
-    } : null
   },
 
   updateQuiz: async (id: string, updates: Partial<Quiz>) => {

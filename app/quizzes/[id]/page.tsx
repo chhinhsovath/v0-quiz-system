@@ -28,6 +28,7 @@ export default function TakeQuizPage() {
   const [submitted, setSubmitted] = useState(false)
   const [score, setScore] = useState(0)
   const [maxScore, setMaxScore] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   const [draggedItem, setDraggedItem] = useState<string | null>(null)
   const [orderedItems, setOrderedItems] = useState<Record<string, string[]>>({})
@@ -35,51 +36,63 @@ export default function TakeQuizPage() {
   const [availableMatches, setAvailableMatches] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
-    if (!user) {
-      router.push("/")
-      return
-    }
-
-    const quizId = params.id as string
-    const foundQuiz = quizStorage.getQuizById(quizId)
-
-    if (!foundQuiz) {
-      router.push("/quizzes")
-      return
-    }
-
-    setQuiz(foundQuiz)
-
-    // Check if multiple attempts are allowed
-    const previousAttempts = quizStorage.getQuizAttempts(quizId, user.id)
-    if (!foundQuiz.allowMultipleAttempts && previousAttempts.length > 0) {
-      router.push(`/quizzes/${quizId}/result/${previousAttempts[0].id}`)
-      return
-    }
-
-    // Randomize questions if enabled
-    const quizQuestions = foundQuiz.randomizeQuestions
-      ? [...foundQuiz.questions].sort(() => Math.random() - 0.5)
-      : foundQuiz.questions
-
-    setQuestions(quizQuestions)
-    setStartTime(new Date())
-
-    // Initialize available matches for matching questions
-    const matchesMap: Record<string, string[]> = {}
-    quizQuestions.forEach((question) => {
-      if (question.type === "matching" && question.pairs) {
-        // Randomize right items for each matching question
-        matchesMap[question.id] = [...question.pairs]
-          .map(p => p.right)
-          .sort(() => Math.random() - 0.5)
+    const loadQuizData = async () => {
+      if (!user) {
+        router.push("/")
+        return
       }
-    })
-    setAvailableMatches(matchesMap)
 
-    if (foundQuiz.timeLimit > 0) {
-      setTimeRemaining(foundQuiz.timeLimit * 60) // Convert to seconds
+      try {
+        setLoading(true)
+        const quizId = params.id as string
+        const foundQuiz = await quizStorage.getQuizById(quizId)
+
+        if (!foundQuiz) {
+          router.push("/quizzes")
+          return
+        }
+
+        setQuiz(foundQuiz)
+
+        // Check if multiple attempts are allowed
+        const previousAttempts = await quizStorage.getQuizAttempts(quizId, user.id)
+        if (!foundQuiz.allowMultipleAttempts && previousAttempts.length > 0) {
+          router.push(`/quizzes/${quizId}/result/${previousAttempts[0].id}`)
+          return
+        }
+
+        // Randomize questions if enabled
+        const quizQuestions = foundQuiz.randomizeQuestions
+          ? [...foundQuiz.questions].sort(() => Math.random() - 0.5)
+          : foundQuiz.questions
+
+        setQuestions(quizQuestions)
+        setStartTime(new Date())
+
+        // Initialize available matches for matching questions
+        const matchesMap: Record<string, string[]> = {}
+        quizQuestions.forEach((question) => {
+          if (question.type === "matching" && question.pairs) {
+            // Randomize right items for each matching question
+            matchesMap[question.id] = [...question.pairs]
+              .map(p => p.right)
+              .sort(() => Math.random() - 0.5)
+          }
+        })
+        setAvailableMatches(matchesMap)
+
+        if (foundQuiz.timeLimit > 0) {
+          setTimeRemaining(foundQuiz.timeLimit * 60) // Convert to seconds
+        }
+      } catch (error) {
+        console.error('Error loading quiz:', error)
+        router.push("/quizzes")
+      } finally {
+        setLoading(false)
+      }
     }
+
+    loadQuizData()
   }, [params.id, user, router])
 
   useEffect(() => {
@@ -162,7 +175,7 @@ export default function TakeQuizPage() {
     return userAnswer === question.correctAnswer
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!quiz || !user || !startTime) return
 
     let totalScore = 0
@@ -191,7 +204,29 @@ export default function TakeQuizPage() {
       timeSpent: Math.floor((new Date().getTime() - startTime.getTime()) / 1000),
     }
 
-    quizStorage.addAttempt(attempt)
+    try {
+      await quizStorage.addAttempt(attempt)
+    } catch (error) {
+      console.error('Error saving attempt:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <NavHeader />
+        <main className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading quiz...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    )
   }
 
   if (!quiz || !user) return null

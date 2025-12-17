@@ -18,6 +18,7 @@ export default function MyResultsPage() {
   const [attempts, setAttempts] = useState<QuizAttempt[]>([])
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) {
@@ -27,12 +28,23 @@ export default function MyResultsPage() {
     loadData()
   }, [user, router])
 
-  const loadData = () => {
+  const loadData = async () => {
     if (!user) return
-    const userAttempts = quizStorage.getUserAttempts(user.id)
-    setAttempts(userAttempts.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()))
-    setQuizzes(quizStorage.getQuizzes())
-    setCategories(quizStorage.getCategories())
+    try {
+      setLoading(true)
+      const [userAttempts, allQuizzes, allCategories] = await Promise.all([
+        quizStorage.getUserAttempts(user.id),
+        quizStorage.getQuizzes(),
+        quizStorage.getCategories()
+      ])
+      setAttempts(userAttempts.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()))
+      setQuizzes(allQuizzes)
+      setCategories(allCategories)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getQuizById = (id: string) => {
@@ -129,7 +141,16 @@ export default function MyResultsPage() {
           </div>
 
           {/* Attempts List */}
-          {attempts.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : attempts.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Trophy className="h-12 w-12 text-muted-foreground mb-4" />

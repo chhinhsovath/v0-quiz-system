@@ -19,6 +19,7 @@ export default function AdminResultsPage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedQuiz, setSelectedQuiz] = useState<string>("all")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -28,12 +29,22 @@ export default function AdminResultsPage() {
     loadData()
   }, [isAdmin, router])
 
-  const loadData = () => {
-    setAttempts(
-      quizStorage.getAttempts().sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()),
-    )
-    setQuizzes(quizStorage.getQuizzes())
-    setCategories(quizStorage.getCategories())
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [attemptsData, quizzesData, categoriesData] = await Promise.all([
+        quizStorage.getAttempts(),
+        quizStorage.getQuizzes(),
+        quizStorage.getCategories()
+      ])
+      setAttempts(attemptsData.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()))
+      setQuizzes(quizzesData)
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getQuizById = (id: string) => {
@@ -150,7 +161,16 @@ export default function AdminResultsPage() {
           </div>
 
           {/* Attempts List */}
-          {filteredAttempts.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : filteredAttempts.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Trophy className="h-12 w-12 text-muted-foreground mb-4" />

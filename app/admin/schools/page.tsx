@@ -19,6 +19,7 @@ export default function SchoolsPage() {
   const { isAdmin, isTeacher } = useAuth()
   const { language, t } = useI18n()
   const [schools, setSchools] = useState<School[]>([])
+  const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
   const [editingSchool, setEditingSchool] = useState<School | null>(null)
   const [formData, setFormData] = useState({
@@ -35,31 +36,47 @@ export default function SchoolsPage() {
     }
   }, [isAdmin, isTeacher])
 
-  const loadSchools = () => {
-    setSchools(quizStorage.getSchools())
-  }
-
-  const handleSubmit = () => {
-    if (editingSchool) {
-      quizStorage.updateSchool(editingSchool.id, formData)
-    } else {
-      const newSchool: School = {
-        id: `school-${Date.now()}`,
-        ...formData,
-        createdAt: new Date().toISOString(),
-      }
-      quizStorage.addSchool(newSchool)
+  const loadSchools = async () => {
+    try {
+      setLoading(true)
+      const data = await quizStorage.getSchools()
+      setSchools(data)
+    } catch (error) {
+      console.error('Error loading schools:', error)
+    } finally {
+      setLoading(false)
     }
-
-    loadSchools()
-    setIsOpen(false)
-    resetForm()
   }
 
-  const handleDelete = (id: string) => {
+  const handleSubmit = async () => {
+    try {
+      if (editingSchool) {
+        await quizStorage.updateSchool(editingSchool.id, formData)
+      } else {
+        const newSchool: School = {
+          id: `school-${Date.now()}`,
+          ...formData,
+          createdAt: new Date().toISOString(),
+        }
+        await quizStorage.addSchool(newSchool)
+      }
+
+      await loadSchools()
+      setIsOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error('Error saving school:', error)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
     if (confirm(language === "km" ? "តើអ្នកប្រាកដទេ?" : "Are you sure?")) {
-      quizStorage.deleteSchool(id)
-      loadSchools()
+      try {
+        await quizStorage.deleteSchool(id)
+        await loadSchools()
+      } catch (error) {
+        console.error('Error deleting school:', error)
+      }
     }
   }
 
@@ -192,8 +209,25 @@ export default function SchoolsPage() {
             )}
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {schools.map((school) => (
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : schools.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{language === "km" ? "មិនទាន់មានសាលា" : "No schools yet"}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {schools.map((school) => (
               <Card key={school.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -241,15 +275,7 @@ export default function SchoolsPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          {schools.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">{language === "km" ? "មិនទាន់មានសាលា" : "No schools yet"}</p>
-              </CardContent>
-            </Card>
+            </div>
           )}
         </div>
       </main>

@@ -10,19 +10,33 @@ import { useParams } from "next/navigation"
 export default function EditQuizPage() {
   const params = useParams()
   const [quiz, setQuiz] = useState<Quiz | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const id = params.id as string
-    const foundQuiz = quizStorage.getQuizById(id)
-    if (foundQuiz) {
-      setQuiz(foundQuiz)
+    const loadQuiz = async () => {
+      try {
+        setLoading(true)
+        const id = params.id as string
+        const foundQuiz = await quizStorage.getQuizById(id)
+        if (foundQuiz) {
+          setQuiz(foundQuiz)
+        }
+      } catch (error) {
+        console.error('Error loading quiz:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+    loadQuiz()
   }, [params.id])
 
-  if (!quiz) {
+  if (loading || !quiz) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading quiz...</p>
+        </div>
       </div>
     )
   }

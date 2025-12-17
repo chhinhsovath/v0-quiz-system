@@ -23,26 +23,45 @@ export default function ReportsPage() {
   const [selectedQuiz, setSelectedQuiz] = useState<string>("")
   const [selectedStudent, setSelectedStudent] = useState<string>("")
   const [students, setStudents] = useState<Array<{ id: string; name: string }>>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (isAdmin || isTeacher) {
-      const allClasses = quizStorage.getClasses()
-      const teacherClasses = isTeacher ? allClasses.filter((c) => c.teacherId === user?.id) : allClasses
-      setClasses(teacherClasses)
-
-      const allQuizzes = quizStorage.getQuizzes()
-      setQuizzes(allQuizzes)
+    const loadData = async () => {
+      if (isAdmin || isTeacher) {
+        try {
+          setLoading(true)
+          const [allClasses, allQuizzes] = await Promise.all([
+            quizStorage.getClasses(),
+            quizStorage.getQuizzes()
+          ])
+          const teacherClasses = isTeacher ? allClasses.filter((c) => c.teacherId === user?.id) : allClasses
+          setClasses(teacherClasses)
+          setQuizzes(allQuizzes)
+        } catch (error) {
+          console.error('Error loading data:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
     }
+    loadData()
   }, [isAdmin, isTeacher, user])
 
   useEffect(() => {
-    if (selectedClass) {
-      const classData = classes.find((c) => c.id === selectedClass)
-      if (classData) {
-        const studentList = quizStorage.getUsersByRole("student").filter((s) => classData.studentIds.includes(s.id))
-        setStudents(studentList.map((s) => ({ id: s.id, name: s.name })))
+    const loadStudents = async () => {
+      if (selectedClass) {
+        const classData = classes.find((c) => c.id === selectedClass)
+        if (classData) {
+          try {
+            const studentList = await quizStorage.getUsersByRole("student")
+            setStudents(studentList.filter((s) => classData.studentIds.includes(s.id)).map((s) => ({ id: s.id, name: s.name })))
+          } catch (error) {
+            console.error('Error loading students:', error)
+          }
+        }
       }
     }
+    loadStudents()
   }, [selectedClass, classes])
 
   const handleExportStudentCSV = () => {

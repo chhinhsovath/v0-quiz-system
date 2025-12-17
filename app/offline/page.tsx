@@ -19,6 +19,7 @@ export default function OfflinePage() {
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([])
   const [downloadedQuizzes, setDownloadedQuizzes] = useState<Quiz[]>([])
   const [isOnline, setIsOnline] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Initialize offline support
@@ -46,12 +47,19 @@ export default function OfflinePage() {
     }
   }, [])
 
-  const loadQuizzes = () => {
-    const allQuizzes = quizStorage.getQuizzes()
-    setAvailableQuizzes(allQuizzes)
+  const loadQuizzes = async () => {
+    try {
+      setLoading(true)
+      const allQuizzes = await quizStorage.getQuizzes()
+      setAvailableQuizzes(allQuizzes)
 
-    const offline = offlineManager.getOfflineQuizzes()
-    setDownloadedQuizzes(offline)
+      const offline = offlineManager.getOfflineQuizzes()
+      setDownloadedQuizzes(offline)
+    } catch (error) {
+      console.error('Error loading quizzes:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleDownload = (quizId: string) => {
@@ -116,7 +124,12 @@ export default function OfflinePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {downloadedQuizzes.length > 0 ? (
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading...</p>
+                  </div>
+                ) : downloadedQuizzes.length > 0 ? (
                   <div className="space-y-3">
                     {downloadedQuizzes.map((quiz) => (
                       <div

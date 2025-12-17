@@ -26,6 +26,7 @@ export default function ClassesPage() {
   const [school, setSchool] = useState<School | null>(null)
   const [classes, setClasses] = useState<Class[]>([])
   const [teachers, setTeachers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
   const [editingClass, setEditingClass] = useState<Class | null>(null)
   const [formData, setFormData] = useState({
@@ -39,40 +40,57 @@ export default function ClassesPage() {
     loadData()
   }, [schoolId])
 
-  const loadData = () => {
-    const schoolData = quizStorage.getSchools().find((s) => s.id === schoolId)
-    setSchool(schoolData || null)
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [schools, classesData, teachersData] = await Promise.all([
+        quizStorage.getSchools(),
+        quizStorage.getClassesBySchool(schoolId),
+        quizStorage.getUsersByRole("teacher")
+      ])
 
-    const classesData = quizStorage.getClassesBySchool(schoolId)
-    setClasses(classesData)
-
-    const teachersData = quizStorage.getUsersByRole("teacher").filter((t) => !t.schoolId || t.schoolId === schoolId)
-    setTeachers(teachersData)
-  }
-
-  const handleSubmit = () => {
-    if (editingClass) {
-      quizStorage.updateClass(editingClass.id, formData)
-    } else {
-      const newClass: Class = {
-        id: `class-${Date.now()}`,
-        schoolId,
-        ...formData,
-        studentIds: [],
-        createdAt: new Date().toISOString(),
-      }
-      quizStorage.addClass(newClass)
+      const schoolData = schools.find((s) => s.id === schoolId)
+      setSchool(schoolData || null)
+      setClasses(classesData)
+      setTeachers(teachersData.filter((t) => !t.schoolId || t.schoolId === schoolId))
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
     }
-
-    loadData()
-    setIsOpen(false)
-    resetForm()
   }
 
-  const handleDelete = (id: string) => {
+  const handleSubmit = async () => {
+    try {
+      if (editingClass) {
+        await quizStorage.updateClass(editingClass.id, formData)
+      } else {
+        const newClass: Class = {
+          id: `class-${Date.now()}`,
+          schoolId,
+          ...formData,
+          studentIds: [],
+          createdAt: new Date().toISOString(),
+        }
+        await quizStorage.addClass(newClass)
+      }
+
+      await loadData()
+      setIsOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error('Error saving class:', error)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
     if (confirm(language === "km" ? "តើអ្នកប្រាកដទេ?" : "Are you sure?")) {
-      quizStorage.deleteClass(id)
-      loadData()
+      try {
+        await quizStorage.deleteClass(id)
+        await loadData()
+      } catch (error) {
+        console.error('Error deleting class:', error)
+      }
     }
   }
 
@@ -221,8 +239,25 @@ export default function ClassesPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {classes.map((classItem) => {
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : classes.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">{language === "km" ? "មិនទាន់មានថ្នាក់" : "No classes yet"}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {classes.map((classItem) => {
               const teacher = teachers.find((t) => t.id === classItem.teacherId)
               const gradeLevel = gradelevels.find((g) => g.id === classItem.gradeLevel)
 
@@ -277,15 +312,7 @@ export default function ClassesPage() {
                 </Card>
               )
             })}
-          </div>
-
-          {classes.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">{language === "km" ? "មិនទាន់មានថ្នាក់" : "No classes yet"}</p>
-              </CardContent>
-            </Card>
+            </div>
           )}
         </div>
       </main>

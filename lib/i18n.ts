@@ -60,6 +60,74 @@ export interface Translation {
   essay: string
   imageChoice: string
   hotspot: string
+
+  // Quiz Builder
+  createNewQuiz: string
+  editQuiz: string
+  quizDetails: string
+  quizTitle: string
+  quizTitleKm: string
+  description: string
+  descriptionKm: string
+  category: string
+  gradeLevel: string
+  examType: string
+  passingScore: string
+  certificateEnabled: string
+  adaptiveTesting: string
+  maxAttempts: string
+  randomizeQuestions: string
+  allowMultipleAttempts: string
+  showCorrectAnswers: string
+  addQuestion: string
+  questionText: string
+  points: string
+  answerOptions: string
+  correctAnswerLabel: string
+  addOption: string
+  removeOption: string
+  explanation: string
+  saveQuiz: string
+  updateQuiz: string
+  backToQuizzes: string
+  noCategoriesMessage: string
+  noQuestionsMessage: string
+  questionAdded: string
+  selectCategory: string
+  selectExamType: string
+  regular: string
+  enableCertificateDesc: string
+  adaptiveTestingDesc: string
+  maxAttemptsDesc: string
+  randomizeQuestionsDesc: string
+  allowMultipleAttemptsDesc: string
+  showCorrectAnswersDesc: string
+  basicInfoDesc: string
+  buildNewQuizDesc: string
+  updateQuizDetailsDesc: string
+  selectCorrectAnswer: string
+  selectAllCorrectAnswers: string
+  enterCorrectAnswer: string
+  answerMatchingCaseInsensitive: string
+  templateUseBlanks: string
+  blanksDetected: string
+  correctAnswersInOrder: string
+  itemsWillBeShuffled: string
+  correctOrderDesc: string
+  matchingPairs: string
+  rightSideShuffled: string
+  itemsInCorrectOrder: string
+  enterItemsInSequence: string
+  essayManualGrading: string
+  sampleAnswerRubric: string
+  sampleAnswerForInstructors: string
+  imageUrl: string
+  imageHotspotDesc: string
+  hotspotsClickableAreas: string
+  noHotspotsYet: string
+  addHotspot: string
+  explanationOptional: string
+  explanationAfterAnswer: string
 }
 
 export const translations: Record<Language, Translation> = {
@@ -118,6 +186,73 @@ export const translations: Record<Language, Translation> = {
     essay: "Essay",
     imageChoice: "Image Choice",
     hotspot: "Hotspot",
+
+    createNewQuiz: "Create New Quiz",
+    editQuiz: "Edit Quiz",
+    quizDetails: "Quiz Details",
+    quizTitle: "Quiz Title",
+    quizTitleKm: "Quiz Title (Khmer)",
+    description: "Description",
+    descriptionKm: "Description (Khmer)",
+    category: "Category",
+    gradeLevel: "Grade Level",
+    examType: "Exam Type",
+    passingScore: "Passing Score (%)",
+    certificateEnabled: "Certificate Enabled",
+    adaptiveTesting: "Adaptive Testing",
+    maxAttempts: "Max Attempts",
+    randomizeQuestions: "Randomize Questions",
+    allowMultipleAttempts: "Allow Multiple Attempts",
+    showCorrectAnswers: "Show Correct Answers",
+    addQuestion: "Add Question",
+    questionText: "Question Text",
+    points: "Points",
+    answerOptions: "Answer Options",
+    correctAnswerLabel: "Correct Answer",
+    addOption: "Add Option",
+    removeOption: "Remove Option",
+    explanation: "Explanation",
+    saveQuiz: "Save Quiz",
+    updateQuiz: "Update Quiz",
+    backToQuizzes: "Back to Quizzes",
+    noCategoriesMessage: "No categories available. Please create a category first.",
+    noQuestionsMessage: 'No questions yet. Click "Add Question" to get started.',
+    questionAdded: "question(s) added",
+    selectCategory: "Select a category",
+    selectExamType: "Select an exam type",
+    regular: "Regular",
+    enableCertificateDesc: "Enable certificate issuance upon passing",
+    adaptiveTestingDesc: "Enable adaptive testing based on student performance",
+    maxAttemptsDesc: "Maximum number of attempts allowed",
+    randomizeQuestionsDesc: "Show questions in random order for each attempt",
+    allowMultipleAttemptsDesc: "Users can retake this quiz multiple times",
+    showCorrectAnswersDesc: "Display correct answers after completion",
+    basicInfoDesc: "Basic information about your quiz",
+    buildNewQuizDesc: "Build a new quiz for your students",
+    updateQuizDetailsDesc: "Update your quiz details and questions",
+    selectCorrectAnswer: "select the correct one",
+    selectAllCorrectAnswers: "select all correct answers",
+    enterCorrectAnswer: "Enter the correct answer",
+    answerMatchingCaseInsensitive: "Answer matching is case-insensitive",
+    templateUseBlanks: "Template (use ___ for blanks)",
+    blanksDetected: "blank(s) detected",
+    correctAnswersInOrder: "Correct Answers (in order)",
+    itemsWillBeShuffled: "Items (will be shuffled for students)",
+    correctOrderDesc: "Students will arrange items in this order. Leave as is to use current order.",
+    matchingPairs: "Matching Pairs",
+    rightSideShuffled: "Right side will be shuffled for students to match",
+    itemsInCorrectOrder: "Items in Correct Order",
+    enterItemsInSequence: "Enter items in the correct sequence from first to last",
+    essayManualGrading: "Essay questions require manual grading by the instructor. Students will have a text area to write their response.",
+    sampleAnswerRubric: "Sample Answer / Grading Rubric (optional)",
+    sampleAnswerForInstructors: "This will only be visible to instructors",
+    imageUrl: "Image URL",
+    imageHotspotDesc: "Image hotspot questions let students click on specific areas of an image. Define correct clickable areas below.",
+    hotspotsClickableAreas: "Hotspots (clickable areas)",
+    noHotspotsYet: "No hotspots defined yet",
+    addHotspot: "Add Hotspot",
+    explanationOptional: "Explanation (optional)",
+    explanationAfterAnswer: "Provide additional context or explanation that will be shown after answering",
   },
   km: {
     dashboard: "ផ្ទាំងគ្រប់គ្រង",
@@ -174,6 +309,73 @@ export const translations: Record<Language, Translation> = {
     essay: "សន្និដ្ឋាន",
     imageChoice: "ជ្រើសរើសរូបភាព",
     hotspot: "ចុចលើចំណុច",
+
+    createNewQuiz: "បង្កើតតេស្តថ្មី",
+    editQuiz: "កែសម្រួលតេស្ត",
+    quizDetails: "ព័ត៌មានលម្អិតតេស្ត",
+    quizTitle: "ចំណងជើងតេស្ត",
+    quizTitleKm: "ចំណងជើងតេស្ត (ខ្មែរ)",
+    description: "ការពិពណ៌នា",
+    descriptionKm: "ការពិពណ៌នា (ខ្មែរ)",
+    category: "ប្រភេទ",
+    gradeLevel: "កម្រិតថ្នាក់",
+    examType: "ប្រភេទប្រឡង",
+    passingScore: "ពិន្ទុជាប់ (%)",
+    certificateEnabled: "បើកវិញ្ញាបនបត្រ",
+    adaptiveTesting: "ការធ្វើតេស្តបែបសម្រួល",
+    maxAttempts: "ចំនួនដងអតិបរមា",
+    randomizeQuestions: "សូរសំណួរចៃដន្យ",
+    allowMultipleAttempts: "អនុញ្ញាតធ្វើតេស្តច្រើនដង",
+    showCorrectAnswers: "បង្ហាញចម្លើយត្រឹមត្រូវ",
+    addQuestion: "បន្ថែមសំណួរ",
+    questionText: "អត្ថបទសំណួរ",
+    points: "ពិន្ទុ",
+    answerOptions: "ជម្រើសចម្លើយ",
+    correctAnswerLabel: "ចម្លើយត្រឹមត្រូវ",
+    addOption: "បន្ថែមជម្រើស",
+    removeOption: "លុបជម្រើស",
+    explanation: "ការពន្យល់",
+    saveQuiz: "រក្សាទុកតេស្ត",
+    updateQuiz: "ធ្វើបច្ចុប្បន្នភាពតេស្ត",
+    backToQuizzes: "ត្រលប់ទៅតេស្ត",
+    noCategoriesMessage: "មិនមានប្រភេទទេ។ សូមបង្កើតប្រភេទមុនសិន។",
+    noQuestionsMessage: 'មិនទាន់មានសំណួរទេ។ ចុច "បន្ថែមសំណួរ" ដើម្បីចាប់ផ្តើម។',
+    questionAdded: "សំណួរបានបន្ថែម",
+    selectCategory: "ជ្រើសរើសប្រភេទ",
+    selectExamType: "ជ្រើសរើសប្រភេទប្រឡង",
+    regular: "ធម្មតា",
+    enableCertificateDesc: "បើកការចេញវិញ្ញាបនបត្រពេលប្រឡងជាប់",
+    adaptiveTestingDesc: "បើកការធ្វើតេស្តបែបសម្រួលដោយផ្អែកលើការអនុវត្តរបស់សិស្ស",
+    maxAttemptsDesc: "ចំនួនដងអតិបរមាដែលអនុញ្ញាត",
+    randomizeQuestionsDesc: "បង្ហាញសំណួរតាមលំដាប់ចៃដន្យសម្រាប់ការធ្វើតេស្តនីមួយៗ",
+    allowMultipleAttemptsDesc: "អ្នកប្រើប្រាស់អាចធ្វើតេស្តនេះច្រើនដង",
+    showCorrectAnswersDesc: "បង្ហាញចម្លើយត្រឹមត្រូវបន្ទាប់ពីបញ្ចប់",
+    basicInfoDesc: "ព័ត៌មានមូលដ្ឋានអំពីតេស្តរបស់អ្នក",
+    buildNewQuizDesc: "បង្កើតតេស្តថ្មីសម្រាប់សិស្សរបស់អ្នក",
+    updateQuizDetailsDesc: "ធ្វើបច្ចុប្បន្នភាពព័ត៌មានលម្អិត និងសំណួររបស់តេស្ត",
+    selectCorrectAnswer: "ជ្រើសរើសចម្លើយត្រឹមត្រូវ",
+    selectAllCorrectAnswers: "ជ្រើសរើសចម្លើយត្រឹមត្រូវទាំងអស់",
+    enterCorrectAnswer: "បញ្ចូលចម្លើយត្រឹមត្រូវ",
+    answerMatchingCaseInsensitive: "ការផ្គូផ្គងចម្លើយមិនអាស្រ័យលើអក្សរធំតូច",
+    templateUseBlanks: "គំរូ (ប្រើ ___ សម្រាប់ចន្លោះ)",
+    blanksDetected: "ចន្លោះត្រូវបានរកឃើញ",
+    correctAnswersInOrder: "ចម្លើយត្រឹមត្រូវ (តាមលំដាប់)",
+    itemsWillBeShuffled: "ធាតុ (នឹងត្រូវសូរចៃដន្យសម្រាប់សិស្ស)",
+    correctOrderDesc: "សិស្សនឹងរៀបចំធាតុតាមលំដាប់នេះ។ ទុកដូចដើមដើម្បីប្រើលំដាប់បច្ចុប្បន្ន។",
+    matchingPairs: "គូផ្គូផ្គង",
+    rightSideShuffled: "ផ្នែកខាងស្តាំនឹងត្រូវសូរសម្រាប់សិស្សផ្គូផ្គង",
+    itemsInCorrectOrder: "ធាតុក្នុងលំដាប់ត្រឹមត្រូវ",
+    enterItemsInSequence: "បញ្ចូលធាតុតាមលំដាប់ត្រឹមត្រូវពីដំបូងដល់ចុងក្រោយ",
+    essayManualGrading: "សំណួរសន្និដ្ឋានតម្រូវឱ្យគ្រូដាក់ពិន្ទុដោយដៃ។ សិស្សនឹងមានកន្លែងសរសេរចម្លើយ។",
+    sampleAnswerRubric: "គំរូចម្លើយ / លក្ខណៈវិនិច្ឆ័យការដាក់ពិន្ទុ (ស្រេចចិត្ត)",
+    sampleAnswerForInstructors: "នេះនឹងមើលឃើញដោយគ្រូប៉ុណ្ណោះ",
+    imageUrl: "URL រូបភាព",
+    imageHotspotDesc: "សំណួរចំណុចរូបភាពអនុញ្ញាតឱ្យសិស្សចុចលើតំបន់ជាក់លាក់នៃរូបភាព។ កំណត់តំបន់ចុចត្រឹមត្រូវខាងក្រោម។",
+    hotspotsClickableAreas: "ចំណុច (តំបន់អាចចុចបាន)",
+    noHotspotsYet: "មិនទាន់មានចំណុចទេ",
+    addHotspot: "បន្ថែមចំណុច",
+    explanationOptional: "ការពន្យល់ (ស្រេចចិត្ត)",
+    explanationAfterAnswer: "ផ្តល់បរិបទ ឬការពន្យល់បន្ថែមដែលនឹងបង្ហាញបន្ទាប់ពីឆ្លើយ",
   },
 }
 

@@ -16,12 +16,23 @@ export default function MyCertificatesPage() {
   const { user } = useAuth()
   const { language } = useI18n()
   const [certificates, setCertificates] = useState<Certificate[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
-      const userCerts = quizStorage.getUserCertificates(user.id)
-      setCertificates(userCerts)
+    const loadCertificates = async () => {
+      if (user) {
+        try {
+          setLoading(true)
+          const userCerts = await quizStorage.getUserCertificates(user.id)
+          setCertificates(userCerts)
+        } catch (error) {
+          console.error('Error loading certificates:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
     }
+    loadCertificates()
   }, [user])
 
   return (
@@ -38,7 +49,16 @@ export default function MyCertificatesPage() {
             </p>
           </div>
 
-          {certificates.length > 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : certificates.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {certificates.map((cert) => {
                 const quiz = quizStorage.getQuizById(cert.quizId)

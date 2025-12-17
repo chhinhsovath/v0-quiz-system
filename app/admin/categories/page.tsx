@@ -30,6 +30,7 @@ export default function CategoriesPage() {
   const { language } = useI18n()
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
@@ -46,27 +47,38 @@ export default function CategoriesPage() {
     loadCategories()
   }, [isAdmin, router])
 
-  const loadCategories = () => {
-    const cats = quizStorage.getCategories()
-    setCategories(cats)
+  const loadCategories = async () => {
+    try {
+      setLoading(true)
+      const cats = await quizStorage.getCategories()
+      setCategories(cats)
+    } catch (error) {
+      console.error('Error loading categories:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (editingCategory) {
-      quizStorage.updateCategory(editingCategory.id, formData)
-    } else {
-      const newCategory: Category = {
-        id: crypto.randomUUID(),
-        ...formData,
+    try {
+      if (editingCategory) {
+        await quizStorage.updateCategory(editingCategory.id, formData)
+      } else {
+        const newCategory: Category = {
+          id: crypto.randomUUID(),
+          ...formData,
+        }
+        await quizStorage.addCategory(newCategory)
       }
-      quizStorage.addCategory(newCategory)
-    }
 
-    loadCategories()
-    setIsDialogOpen(false)
-    resetForm()
+      await loadCategories()
+      setIsDialogOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error('Error saving category:', error)
+    }
   }
 
   const handleEdit = (category: Category) => {
@@ -79,7 +91,7 @@ export default function CategoriesPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (
       confirm(
         language === "km"
@@ -87,8 +99,12 @@ export default function CategoriesPage() {
           : "Are you sure you want to delete this category? Quizzes in this category will not be deleted."
       )
     ) {
-      quizStorage.deleteCategory(id)
-      loadCategories()
+      try {
+        await quizStorage.deleteCategory(id)
+        await loadCategories()
+      } catch (error) {
+        console.error('Error deleting category:', error)
+      }
     }
   }
 
@@ -223,7 +239,16 @@ export default function CategoriesPage() {
             </Dialog>
           </div>
 
-          {categories.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : categories.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />

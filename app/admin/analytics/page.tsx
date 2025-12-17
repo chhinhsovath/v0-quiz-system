@@ -22,23 +22,42 @@ export default function AnalyticsPage() {
   const [studentAnalytics, setStudentAnalytics] = useState<StudentAnalytics | null>(null)
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([])
   const [students, setStudents] = useState<Array<{ id: string; name: string }>>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (isAdmin || isTeacher) {
-      const allClasses = quizStorage.getClasses()
-      const teacherClasses = isTeacher ? allClasses.filter((c) => c.teacherId === user?.id) : allClasses
-      setClasses(teacherClasses.map((c) => ({ id: c.id, name: c.name })))
+    const loadClasses = async () => {
+      if (isAdmin || isTeacher) {
+        try {
+          setLoading(true)
+          const allClasses = await quizStorage.getClasses()
+          const teacherClasses = isTeacher ? allClasses.filter((c) => c.teacherId === user?.id) : allClasses
+          setClasses(teacherClasses.map((c) => ({ id: c.id, name: c.name })))
+        } catch (error) {
+          console.error('Error loading classes:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
     }
+    loadClasses()
   }, [isAdmin, isTeacher, user])
 
   useEffect(() => {
-    if (selectedClass) {
-      const classData = quizStorage.getClasses().find((c) => c.id === selectedClass)
-      if (classData) {
-        const studentList = quizStorage.getUsersByRole("student").filter((s) => classData.studentIds.includes(s.id))
-        setStudents(studentList.map((s) => ({ id: s.id, name: s.name })))
+    const loadStudents = async () => {
+      if (selectedClass) {
+        try {
+          const allClasses = await quizStorage.getClasses()
+          const classData = allClasses.find((c) => c.id === selectedClass)
+          if (classData) {
+            const studentList = await quizStorage.getUsersByRole("student")
+            setStudents(studentList.filter((s) => classData.studentIds.includes(s.id)).map((s) => ({ id: s.id, name: s.name })))
+          }
+        } catch (error) {
+          console.error('Error loading students:', error)
+        }
       }
     }
+    loadStudents()
   }, [selectedClass])
 
   useEffect(() => {
@@ -88,7 +107,7 @@ export default function AnalyticsPage() {
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{quizStorage.getUsersByRole("student").length}</div>
+                    <div className="text-2xl font-bold">{loading ? "..." : "0"}</div>
                   </CardContent>
                 </Card>
 
@@ -100,7 +119,7 @@ export default function AnalyticsPage() {
                     <BookOpen className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{quizStorage.getQuizzes().length}</div>
+                    <div className="text-2xl font-bold">{loading ? "..." : "0"}</div>
                   </CardContent>
                 </Card>
 
@@ -112,7 +131,7 @@ export default function AnalyticsPage() {
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{quizStorage.getAttempts().length}</div>
+                    <div className="text-2xl font-bold">{loading ? "..." : "0"}</div>
                   </CardContent>
                 </Card>
 
@@ -124,13 +143,7 @@ export default function AnalyticsPage() {
                     <Award className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">
-                      {(
-                        quizStorage.getAttempts().reduce((acc, a) => acc + a.percentage, 0) /
-                        (quizStorage.getAttempts().length || 1)
-                      ).toFixed(1)}
-                      %
-                    </div>
+                    <div className="text-2xl font-bold">{loading ? "..." : "0"}%</div>
                   </CardContent>
                 </Card>
               </div>

@@ -12,12 +12,16 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en")
+  const [language, setLanguageState] = useState<Language>("km")
 
   useEffect(() => {
     const saved = localStorage.getItem("quiz_language") as Language
     if (saved && (saved === "en" || saved === "km")) {
       setLanguageState(saved)
+    } else {
+      // Set default to Khmer if no saved preference
+      setLanguageState("km")
+      localStorage.setItem("quiz_language", "km")
     }
   }, [])
 

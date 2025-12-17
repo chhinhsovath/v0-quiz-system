@@ -58,14 +58,22 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       router.push("/")
       return
     }
-    const cats = quizStorage.getCategories()
-    setCategories(cats)
-
-    // Set default category if none selected
-    if (!quizData.categoryId && cats.length > 0) {
-      setQuizData((prev) => ({ ...prev, categoryId: cats[0].id }))
-    }
+    loadCategories()
   }, [isAdmin, router])
+
+  const loadCategories = async () => {
+    try {
+      const cats = await quizStorage.getCategories()
+      setCategories(cats)
+
+      // Set default category if none selected
+      if (!quizData.categoryId && cats.length > 0) {
+        setQuizData((prev) => ({ ...prev, categoryId: cats[0].id }))
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error)
+    }
+  }
 
   const addQuestion = () => {
     const newQuestion: Question = {
@@ -168,7 +176,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     )
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!quizData.title.trim()) {
       toast.error("Please enter a quiz title")
       return
@@ -283,18 +291,23 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       createdAt: initialQuiz?.createdAt || new Date().toISOString(),
     }
 
-    if (initialQuiz) {
-      quizStorage.updateQuiz(quiz.id, quiz)
-      toast.success("Quiz updated successfully!")
-    } else {
-      quizStorage.addQuiz(quiz)
-      toast.success("Quiz created successfully!")
-    }
+    try {
+      if (initialQuiz) {
+        await quizStorage.updateQuiz(quiz.id, quiz)
+        toast.success("Quiz updated successfully!")
+      } else {
+        await quizStorage.addQuiz(quiz)
+        toast.success("Quiz created successfully!")
+      }
 
-    // Delay navigation to show toast
-    setTimeout(() => {
-      router.push("/admin/quizzes")
-    }, 500)
+      // Delay navigation to show toast
+      setTimeout(() => {
+        router.push("/admin/quizzes")
+      }, 500)
+    } catch (error) {
+      console.error('Error saving quiz:', error)
+      toast.error(initialQuiz ? "Failed to update quiz" : "Failed to create quiz")
+    }
   }
 
   if (!isAdmin) return null

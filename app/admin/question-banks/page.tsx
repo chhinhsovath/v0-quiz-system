@@ -21,6 +21,7 @@ export default function QuestionBanksPage() {
   const { user, isAdmin, isTeacher } = useAuth()
   const { language } = useI18n()
   const [banks, setBanks] = useState<QuestionBank[]>([])
+  const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
   const [editingBank, setEditingBank] = useState<QuestionBank | null>(null)
   const [formData, setFormData] = useState({
@@ -36,37 +37,52 @@ export default function QuestionBanksPage() {
     }
   }, [isAdmin, isTeacher])
 
-  const loadBanks = () => {
-    const allBanks = quizStorage.getQuestionBanks()
-    // Filter banks created by user or shared with user
-    const filtered = allBanks.filter((b) => b.createdBy === user?.id || b.sharedWith.includes(user?.id || ""))
-    setBanks(filtered)
-  }
-
-  const handleSubmit = () => {
-    if (editingBank) {
-      quizStorage.updateQuestionBank(editingBank.id, formData)
-    } else {
-      const newBank: QuestionBank = {
-        id: `bank-${Date.now()}`,
-        ...formData,
-        questions: [],
-        createdBy: user?.id || "",
-        sharedWith: [],
-        createdAt: new Date().toISOString(),
-      }
-      quizStorage.addQuestionBank(newBank)
+  const loadBanks = async () => {
+    try {
+      setLoading(true)
+      const allBanks = await quizStorage.getQuestionBanks()
+      // Filter banks created by user or shared with user
+      const filtered = allBanks.filter((b) => b.createdBy === user?.id || b.sharedWith.includes(user?.id || ""))
+      setBanks(filtered)
+    } catch (error) {
+      console.error('Error loading question banks:', error)
+    } finally {
+      setLoading(false)
     }
-
-    loadBanks()
-    setIsOpen(false)
-    resetForm()
   }
 
-  const handleDelete = (id: string) => {
+  const handleSubmit = async () => {
+    try {
+      if (editingBank) {
+        await quizStorage.updateQuestionBank(editingBank.id, formData)
+      } else {
+        const newBank: QuestionBank = {
+          id: `bank-${Date.now()}`,
+          ...formData,
+          questions: [],
+          createdBy: user?.id || "",
+          sharedWith: [],
+          createdAt: new Date().toISOString(),
+        }
+        await quizStorage.addQuestionBank(newBank)
+      }
+
+      await loadBanks()
+      setIsOpen(false)
+      resetForm()
+    } catch (error) {
+      console.error('Error saving question bank:', error)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
     if (confirm(language === "km" ? "តើអ្នកប្រាកដទេ?" : "Are you sure?")) {
-      quizStorage.deleteQuestionBank(id)
-      loadBanks()
+      try {
+        await quizStorage.deleteQuestionBank(id)
+        await loadBanks()
+      } catch (error) {
+        console.error('Error deleting question bank:', error)
+      }
     }
   }
 
@@ -205,8 +221,27 @@ export default function QuestionBanksPage() {
             </Dialog>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {banks.map((bank) => {
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : banks.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  {language === "km" ? "មិនទាន់មានធនាគារសំណួរ" : "No question banks yet"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {banks.map((bank) => {
               const subject = cambodianSubjects.find((s) => s.id === bank.subject)
               const grade = gradelevels.find((g) => g.id === bank.gradeLevel)
 
@@ -267,17 +302,7 @@ export default function QuestionBanksPage() {
                 </Card>
               )
             })}
-          </div>
-
-          {banks.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  {language === "km" ? "មិនទាន់មានធនាគារសំណួរ" : "No question banks yet"}
-                </p>
-              </CardContent>
-            </Card>
+            </div>
           )}
         </div>
       </main>

@@ -9,10 +9,11 @@ import { quizStorage } from "@/lib/quiz-storage"
 import type { Quiz, Category } from "@/lib/quiz-types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, Clock, Shuffle, Repeat, Eye, ClipboardList } from "lucide-react"
+import { Plus, Pencil, Trash2, Clock, Shuffle, Repeat, Eye, ClipboardList, Database } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { seedDemoDataSupabase } from "@/lib/seed-utils.supabase"
 
 export default function QuizzesPage() {
   const { isAdmin, user } = useAuth()
@@ -20,6 +21,8 @@ export default function QuizzesPage() {
   const router = useRouter()
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [seedResult, setSeedResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -29,12 +32,23 @@ export default function QuizzesPage() {
     loadData()
   }, [isAdmin, router])
 
-  const loadData = () => {
-    setQuizzes(quizStorage.getQuizzes())
-    setCategories(quizStorage.getCategories())
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [quizzesData, categoriesData] = await Promise.all([
+        quizStorage.getQuizzes(),
+        quizStorage.getCategories()
+      ])
+      setQuizzes(quizzesData)
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (
       confirm(
         language === "km"
@@ -42,13 +56,42 @@ export default function QuizzesPage() {
           : "Are you sure you want to delete this quiz? This action cannot be undone."
       )
     ) {
-      quizStorage.deleteQuiz(id)
-      loadData()
+      try {
+        await quizStorage.deleteQuiz(id)
+        await loadData()
+      } catch (error) {
+        console.error('Error deleting quiz:', error)
+        alert(language === "km" ? "មានបញ្ហាក្នុងការលុប" : "Error deleting quiz")
+      }
     }
   }
 
   const getCategoryById = (id: string) => {
     return categories.find((c) => c.id === id)
+  }
+
+  const handleSeedData = async () => {
+    try {
+      setLoading(true)
+      const result = await seedDemoDataSupabase()
+      setSeedResult(result)
+      if (result.success) {
+        await loadData()
+        setTimeout(() => setSeedResult(null), 5000)
+      }
+    } catch (error) {
+      console.error('Error seeding data:', error)
+      setSeedResult({
+        success: false,
+        message: language === "km"
+          ? "មានបញ្ហាក្នុងការបន្ថែមទិន្នន័យសាកល្បង"
+          : "Error seeding demo data",
+        categoriesAdded: 0,
+        quizzesAdded: 0
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!isAdmin) return null
@@ -70,15 +113,50 @@ export default function QuizzesPage() {
               </p>
             </div>
 
-            <Link href="/admin/quizzes/create">
-              <Button className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                {language === "km" ? "បង្កើតតេស្ត" : "Create Quiz"}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleSeedData}
+                className="w-full sm:w-auto"
+                disabled={loading}
+              >
+                <Database className="h-4 w-4 mr-2" />
+                {loading
+                  ? (language === "km" ? "កំពុងបន្ថែម..." : "Seeding...")
+                  : (language === "km" ? "ទិន្នន័យសាកល្បង" : "Seed Demo Data")
+                }
               </Button>
-            </Link>
+              <Link href="/admin/quizzes/create">
+                <Button className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {language === "km" ? "បង្កើតតេស្ត" : "Create Quiz"}
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          {quizzes.length === 0 ? (
+          {seedResult && (
+            <div
+              className={`mb-4 p-4 rounded-lg ${
+                seedResult.success ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"
+              }`}
+            >
+              <p className="font-medium">{seedResult.message}</p>
+            </div>
+          )}
+
+          {loading ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">
+                    {language === "km" ? "កំពុងផ្ទុក..." : "Loading..."}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : quizzes.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
