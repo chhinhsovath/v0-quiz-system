@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Clock, CheckCircle2, AlertCircle, Loader2, Eye } from "lucide-react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 
 export default function TakeQuizPage() {
   const params = useParams()
@@ -145,12 +146,15 @@ export default function TakeQuizPage() {
     if (!isAutoSubmit) {
       const unanswered = questions.filter(q => !answers[q.id]).length
       if (unanswered > 0) {
-        const confirm = window.confirm(
+        toast.warning(
           language === 'km'
-            ? `អ្នកមានសំណួរ ${unanswered} ដែលមិនទាន់ឆ្លើយ។ តើអ្នកចង់ដាក់ស្នើទេ?`
-            : `You have ${unanswered} unanswered questions. Do you want to submit anyway?`
+            ? `អ្នកមានសំណួរ ${unanswered} ដែលមិនទាន់ឆ្លើយ។ សូមឆ្លើយសំណួរទាំងអស់មុនពេលដាក់ស្នើ។`
+            : `You have ${unanswered} unanswered questions. Please answer all questions before submitting.`,
+          {
+            duration: 4000,
+          }
         )
-        if (!confirm) return
+        return
       }
     }
 
