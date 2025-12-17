@@ -57,10 +57,10 @@ export default function QuestionBanksPage() {
         await quizStorage.updateQuestionBank(editingBank.id, formData)
       } else {
         const newBank: QuestionBank = {
-          id: `bank-${Date.now()}`,
+          id: crypto.randomUUID(), // Generate proper UUID
           ...formData,
           questions: [],
-          createdBy: user?.id || "",
+          createdBy: user?.id || '00000000-0000-0000-0000-000000000001', // Default admin UUID if no user
           sharedWith: [],
           createdAt: new Date().toISOString(),
         }
@@ -72,6 +72,7 @@ export default function QuestionBanksPage() {
       resetForm()
     } catch (error) {
       console.error('Error saving question bank:', error)
+      alert(language === "km" ? "មានបញ្ហាក្នុងការរក្សាទុក" : "Error saving question bank")
     }
   }
 
