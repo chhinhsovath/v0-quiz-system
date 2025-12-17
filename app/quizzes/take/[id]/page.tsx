@@ -14,14 +14,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
-import { useParams, useRouter } from "next/navigation"
+import { Clock, CheckCircle2, AlertCircle, Loader2, Eye } from "lucide-react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 
 export default function TakeQuizPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const { language, t } = useI18n()
+
+  // Check if this is a preview mode
+  const isPreview = searchParams.get('preview') === 'true'
 
   // Attempt data
   const [attemptId, setAttemptId] = useState<string | null>(null)
@@ -56,7 +60,8 @@ export default function TakeQuizPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             quiz_id: params.id,
-            user_id: user.id
+            user_id: user.id,
+            is_preview: isPreview
           })
         })
 
@@ -222,6 +227,18 @@ export default function TakeQuizPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Preview Mode Banner */}
+          {isPreview && (
+            <Alert className="mb-4 border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+              <Eye className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800 dark:text-blue-400">
+                {language === 'km'
+                  ? 'មើលជាមុន - លទ្ធផលនឹងមិនត្រូវបានរក្សាទុកក្នុងប្រវត្តិនៃការប្រឡងរបស់សិស្សទេ'
+                  : 'Preview Mode - Results will not be saved to student test history'}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Quiz Header */}
           <Card className="mb-6">
             <CardHeader>

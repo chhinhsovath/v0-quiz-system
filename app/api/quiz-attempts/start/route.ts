@@ -9,7 +9,7 @@ import { prepareQuestionsForStudent } from '@/lib/shuffle-utils'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { quiz_id, user_id } = body
+    const { quiz_id, user_id, is_preview } = body
 
     if (!quiz_id || !user_id) {
       return NextResponse.json(
@@ -32,45 +32,50 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if multiple attempts are allowed
-    if (!quiz.allow_multiple_attempts) {
-      const { data: existingAttempts } = await supabase
-        .from('quiz_attempts')
-        .select('id, status')
-        .eq('quiz_id', quiz_id)
-        .eq('user_id', user_id)
-        .eq('status', 'completed')
+    // Skip attempt checks if this is a preview
+    if (!is_preview) {
+      // Check if multiple attempts are allowed
+      if (!quiz.allow_multiple_attempts) {
+        const { data: existingAttempts } = await supabase
+          .from('quiz_attempts')
+          .select('id, status')
+          .eq('quiz_id', quiz_id)
+          .eq('user_id', user_id)
+          .eq('status', 'completed')
+          .eq('is_preview', false) // Only count real attempts
 
-      if (existingAttempts && existingAttempts.length > 0) {
-        return NextResponse.json(
-          {
-            error: 'Multiple attempts not allowed',
-            existing_attempt_id: existingAttempts[0].id
-          },
-          { status: 403 }
-        )
+        if (existingAttempts && existingAttempts.length > 0) {
+          return NextResponse.json(
+            {
+              error: 'Multiple attempts not allowed',
+              existing_attempt_id: existingAttempts[0].id
+            },
+            { status: 403 }
+          )
+        }
       }
-    }
 
-    // Check max attempts limit
-    if (quiz.max_attempts && quiz.max_attempts > 0) {
-      const { data: attemptCount } = await supabase
-        .from('quiz_attempts')
-        .select('id', { count: 'exact', head: true })
-        .eq('quiz_id', quiz_id)
-        .eq('user_id', user_id)
-        .eq('status', 'completed')
+      // Check max attempts limit
+      if (quiz.max_attempts && quiz.max_attempts > 0) {
+        const { data: attemptCount } = await supabase
+          .from('quiz_attempts')
+          .select('id', { count: 'exact', head: true })
+          .eq('quiz_id', quiz_id)
+          .eq('user_id', user_id)
+          .eq('status', 'completed')
+          .eq('is_preview', false) // Only count real attempts
 
-      const { count } = attemptCount as any
+        const { count } = attemptCount as any
 
-      if (count >= quiz.max_attempts) {
-        return NextResponse.json(
-          {
-            error: `Maximum attempts reached (${quiz.max_attempts})`,
-            attempts_used: count
-          },
-          { status: 403 }
-        )
+        if (count >= quiz.max_attempts) {
+          return NextResponse.json(
+            {
+              error: `Maximum attempts reached (${quiz.max_attempts})`,
+              attempts_used: count
+            },
+            { status: 403 }
+          )
+        }
       }
     }
 
@@ -111,7 +116,8 @@ export async function POST(request: NextRequest) {
         status: 'in_progress',
         started_at: new Date().toISOString(),
         ip_address,
-        user_agent
+        user_agent,
+        is_preview: is_preview || false // Mark as preview if requested
       })
       .select()
       .single()
@@ -135,7 +141,8 @@ export async function POST(request: NextRequest) {
         max_score: attempt.max_score,
         time_limit: attempt.time_limit,
         started_at: attempt.started_at,
-        status: attempt.status
+        status: attempt.status,
+        is_preview: attempt.is_preview
       },
       questions: preparedQuestions, // Already randomized and shuffled
       quiz_info: {

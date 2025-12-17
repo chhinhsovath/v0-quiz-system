@@ -9,7 +9,7 @@ import { quizStorage } from "@/lib/quiz-storage"
 import type { Quiz, Category } from "@/lib/quiz-types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Pencil, Trash2, Clock, Shuffle, Repeat, Eye, ClipboardList, Database } from "lucide-react"
+import { Plus, Pencil, Trash2, Clock, Shuffle, Repeat, Eye, ClipboardList, Database, Play } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -238,6 +238,12 @@ export default function QuizzesPage() {
                         )}
                       </div>
                       <div className="flex gap-2">
+                        <Link href={`/quizzes/take/${quiz.id}?preview=true`} className="flex-1">
+                          <Button variant="outline" className="w-full bg-transparent">
+                            <Play className="h-4 w-4 mr-2" />
+                            {language === "km" ? "មើលជាមុន" : "Preview"}
+                          </Button>
+                        </Link>
                         <Link href={`/admin/quizzes/edit/${quiz.id}`} className="flex-1">
                           <Button variant="outline" className="w-full bg-transparent">
                             <Pencil className="h-4 w-4 mr-2" />

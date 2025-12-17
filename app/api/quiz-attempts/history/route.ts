@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('user_id', user_id)
+      .eq('is_preview', false) // Exclude preview attempts from student history
       .order('started_at', { ascending: false })
 
     // Filter by quiz_id if provided

@@ -107,7 +107,8 @@ export async function POST(request: NextRequest) {
     const passed = percentage >= quiz.passing_score
 
     let certificate = null
-    if (passed && quiz.certificate_enabled) {
+    // Only generate certificate for real attempts (not previews)
+    if (passed && quiz.certificate_enabled && !attempt.is_preview) {
       // Generate certificate
       const certificateNumber = `CERT-${Date.now()}-${attempt.user_id.substring(0, 8)}`
 
