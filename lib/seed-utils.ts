@@ -1,39 +1,52 @@
 import { quizStorage } from "./quiz-storage"
 import { seedCategories, seedQuizzes } from "./seed-data"
+import { seedQuestionBanks } from "./seed-question-banks-data"
 
-export function seedDemoData() {
+export async function seedDemoData() {
   try {
     // Check if data already exists
-    const existingCategories = quizStorage.getCategories()
-    const existingQuizzes = quizStorage.getQuizzes()
+    const existingCategories = await quizStorage.getCategories()
+    const existingQuizzes = await quizStorage.getQuizzes()
+    const existingQuestionBanks = await quizStorage.getQuestionBanks()
 
     // Only seed if no data exists or if explicitly requested
     let categoriesAdded = 0
     let quizzesAdded = 0
+    let questionBanksAdded = 0
 
     // Seed categories
-    seedCategories.forEach((category) => {
+    for (const category of seedCategories) {
       const exists = existingCategories.find((c) => c.id === category.id)
       if (!exists) {
-        quizStorage.addCategory(category)
+        await quizStorage.addCategory(category)
         categoriesAdded++
       }
-    })
+    }
 
     // Seed quizzes
-    seedQuizzes.forEach((quiz) => {
+    for (const quiz of seedQuizzes) {
       const exists = existingQuizzes.find((q) => q.id === quiz.id)
       if (!exists) {
-        quizStorage.addQuiz(quiz)
+        await quizStorage.addQuiz(quiz)
         quizzesAdded++
       }
-    })
+    }
+
+    // Seed question banks
+    for (const bank of seedQuestionBanks) {
+      const exists = existingQuestionBanks.find((b) => b.id === bank.id)
+      if (!exists) {
+        await quizStorage.addQuestionBank(bank)
+        questionBanksAdded++
+      }
+    }
 
     return {
       success: true,
-      message: `Successfully seeded ${categoriesAdded} categories and ${quizzesAdded} quizzes`,
+      message: `Successfully seeded ${categoriesAdded} categories, ${quizzesAdded} quizzes, and ${questionBanksAdded} question banks`,
       categoriesAdded,
       quizzesAdded,
+      questionBanksAdded,
     }
   } catch (error) {
     return {
@@ -41,6 +54,7 @@ export function seedDemoData() {
       message: `Error seeding data: ${error}`,
       categoriesAdded: 0,
       quizzesAdded: 0,
+      questionBanksAdded: 0,
     }
   }
 }
