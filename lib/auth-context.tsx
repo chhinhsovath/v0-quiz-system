@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Get users from storage
-    const users = quizStorage.getUsers()
+    const users = await quizStorage.getUsers()
 
     // Simple authentication (in production, use proper auth)
     const foundUser = users.find((u) => u.email === email)
