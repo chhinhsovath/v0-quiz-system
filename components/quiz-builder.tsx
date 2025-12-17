@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
@@ -434,213 +435,244 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
           </div>
 
           <div className="space-y-6">
-            {/* Quiz Details */}
+            {/* Quiz Details - Compact Tabbed Design */}
             <Card>
               <CardHeader>
                 <CardTitle>{t.quizDetails}</CardTitle>
                 <CardDescription>{t.basicInfoDesc}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">{t.quizTitle}</Label>
-                  <Input
-                    id="title"
-                    placeholder="e.g., Chapter 1: Introduction to Biology"
-                    value={quizData.title}
-                    onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
-                  />
-                </div>
+              <CardContent>
+                <Tabs defaultValue="basic" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="basic">
+                      {language === "km" ? "ព័ត៌មានមូលដ្ឋាន" : "Basic Info"}
+                    </TabsTrigger>
+                    <TabsTrigger value="settings">
+                      {language === "km" ? "ការកំណត់" : "Settings"}
+                    </TabsTrigger>
+                    <TabsTrigger value="options">
+                      {language === "km" ? "ជម្រើស" : "Options"}
+                    </TabsTrigger>
+                  </TabsList>
 
-                <div className="space-y-2">
-                  <Label htmlFor="titleKm">{t.quizTitleKm}</Label>
-                  <Input
-                    id="titleKm"
-                    placeholder="e.g., ជំពូកទី១៖ ការណែនាំអំពីជីវវិទ្យា"
-                    value={quizData.titleKm}
-                    onChange={(e) => setQuizData({ ...quizData, titleKm: e.target.value })}
-                  />
-                </div>
+                  {/* Basic Info Tab */}
+                  <TabsContent value="basic" className="space-y-4 mt-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">{t.quizTitle}</Label>
+                        <Input
+                          id="title"
+                          placeholder="e.g., Chapter 1: Introduction to Biology"
+                          value={quizData.title}
+                          onChange={(e) => setQuizData({ ...quizData, title: e.target.value })}
+                        />
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">{t.description}</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Brief description of what this quiz covers"
-                    value={quizData.description}
-                    onChange={(e) => setQuizData({ ...quizData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="descriptionKm">{t.descriptionKm}</Label>
-                  <Textarea
-                    id="descriptionKm"
-                    placeholder="ការពិពណ៌នាខ្លីៗអំពីអ្វីដែលតេស្តនេះគ្របដណ្តប់"
-                    value={quizData.descriptionKm}
-                    onChange={(e) => setQuizData({ ...quizData, descriptionKm: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">{t.category}</Label>
-                  {categories.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      {t.noCategoriesMessage}
-                    </p>
-                  ) : (
-                    <Select
-                      value={quizData.categoryId}
-                      onValueChange={(value) => setQuizData({ ...quizData, categoryId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t.selectCategory} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gradeLevel">{t.gradeLevel}</Label>
-                  <Input
-                    id="gradeLevel"
-                    placeholder="e.g., 10th Grade"
-                    value={quizData.gradeLevel}
-                    onChange={(e) => setQuizData({ ...quizData, gradeLevel: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subject">{t.subject}</Label>
-                  <Input
-                    id="subject"
-                    placeholder="e.g., Biology"
-                    value={quizData.subject}
-                    onChange={(e) => setQuizData({ ...quizData, subject: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="examType">{t.examType}</Label>
-                  <Select
-                    value={quizData.examType}
-                    onValueChange={(value) => setQuizData({ ...quizData, examType: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t.selectExamType} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="regular">{t.regular}</SelectItem>
-                      <SelectItem value="national">{t.nationalExam}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="passingScore">{t.passingScore}</Label>
-                  <Input
-                    id="passingScore"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={quizData.passingScore}
-                    onChange={(e) => setQuizData({ ...quizData, passingScore: Number.parseInt(e.target.value) || 60 })}
-                  />
-                </div>
-
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t.certificateEnabled}</Label>
-                      <p className="text-sm text-muted-foreground">{t.enableCertificateDesc}</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="titleKm">{t.quizTitleKm}</Label>
+                        <Input
+                          id="titleKm"
+                          placeholder="e.g., ជំពូកទី១៖ ការណែនាំអំពីជីវវិទ្យា"
+                          value={quizData.titleKm}
+                          onChange={(e) => setQuizData({ ...quizData, titleKm: e.target.value })}
+                        />
+                      </div>
                     </div>
-                    <Switch
-                      checked={quizData.certificateEnabled}
-                      onCheckedChange={(checked) => setQuizData({ ...quizData, certificateEnabled: checked })}
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t.adaptiveTesting}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {t.adaptiveTestingDesc}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={quizData.adaptiveTesting}
-                      onCheckedChange={(checked) => setQuizData({ ...quizData, adaptiveTesting: checked })}
-                    />
-                  </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="description">{t.description}</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Brief description..."
+                          value={quizData.description}
+                          onChange={(e) => setQuizData({ ...quizData, description: e.target.value })}
+                          rows={2}
+                        />
+                      </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t.maxAttempts}</Label>
-                      <p className="text-sm text-muted-foreground">{t.maxAttemptsDesc}</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="descriptionKm">{t.descriptionKm}</Label>
+                        <Textarea
+                          id="descriptionKm"
+                          placeholder="ការពិពណ៌នាខ្លីៗ..."
+                          value={quizData.descriptionKm}
+                          onChange={(e) => setQuizData({ ...quizData, descriptionKm: e.target.value })}
+                          rows={2}
+                        />
+                      </div>
                     </div>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={quizData.maxAttempts}
-                      onChange={(e) => setQuizData({ ...quizData, maxAttempts: Number.parseInt(e.target.value) || 3 })}
-                      className="w-24"
-                    />
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t.randomizeQuestions}</Label>
-                      <p className="text-sm text-muted-foreground">{t.randomizeQuestionsDesc}</p>
-                    </div>
-                    <Switch
-                      checked={quizData.randomizeQuestions}
-                      onCheckedChange={(checked) => setQuizData({ ...quizData, randomizeQuestions: checked })}
-                    />
-                  </div>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="category">{t.category}</Label>
+                        {categories.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            {t.noCategoriesMessage}
+                          </p>
+                        ) : (
+                          <Select
+                            value={quizData.categoryId}
+                            onValueChange={(value) => setQuizData({ ...quizData, categoryId: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={t.selectCategory} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Shuffle Answer Options</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Randomize option order for each student to prevent cheating
-                      </p>
-                    </div>
-                    <Switch
-                      checked={quizData.shuffleOptions}
-                      onCheckedChange={(checked) => setQuizData({ ...quizData, shuffleOptions: checked })}
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="gradeLevel">{t.gradeLevel}</Label>
+                        <Input
+                          id="gradeLevel"
+                          placeholder="e.g., 10th Grade"
+                          value={quizData.gradeLevel}
+                          onChange={(e) => setQuizData({ ...quizData, gradeLevel: e.target.value })}
+                        />
+                      </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t.allowMultipleAttempts}</Label>
-                      <p className="text-sm text-muted-foreground">{t.allowMultipleAttemptsDesc}</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="subject">{t.subject}</Label>
+                        <Input
+                          id="subject"
+                          placeholder="e.g., Biology"
+                          value={quizData.subject}
+                          onChange={(e) => setQuizData({ ...quizData, subject: e.target.value })}
+                        />
+                      </div>
                     </div>
-                    <Switch
-                      checked={quizData.allowMultipleAttempts}
-                      onCheckedChange={(checked) => setQuizData({ ...quizData, allowMultipleAttempts: checked })}
-                    />
-                  </div>
+                  </TabsContent>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t.showCorrectAnswers}</Label>
-                      <p className="text-sm text-muted-foreground">{t.showCorrectAnswersDesc}</p>
+                  {/* Settings Tab */}
+                  <TabsContent value="settings" className="space-y-4 mt-4">
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="examType">{t.examType}</Label>
+                        <Select
+                          value={quizData.examType}
+                          onValueChange={(value) => setQuizData({ ...quizData, examType: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t.selectExamType} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="regular">{t.regular}</SelectItem>
+                            <SelectItem value="national">{t.nationalExam}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="passingScore">{t.passingScore}</Label>
+                        <Input
+                          id="passingScore"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={quizData.passingScore}
+                          onChange={(e) => setQuizData({ ...quizData, passingScore: Number.parseInt(e.target.value) || 60 })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="maxAttempts">{t.maxAttempts}</Label>
+                        <Input
+                          id="maxAttempts"
+                          type="number"
+                          min="1"
+                          value={quizData.maxAttempts}
+                          onChange={(e) => setQuizData({ ...quizData, maxAttempts: Number.parseInt(e.target.value) || 3 })}
+                        />
+                        <p className="text-xs text-muted-foreground">{t.maxAttemptsDesc}</p>
+                      </div>
                     </div>
-                    <Switch
-                      checked={quizData.showCorrectAnswers}
-                      onCheckedChange={(checked) => setQuizData({ ...quizData, showCorrectAnswers: checked })}
-                    />
-                  </div>
-                </div>
+                  </TabsContent>
+
+                  {/* Options Tab */}
+                  <TabsContent value="options" className="space-y-3 mt-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">{t.certificateEnabled}</Label>
+                          <p className="text-xs text-muted-foreground">{t.enableCertificateDesc}</p>
+                        </div>
+                        <Switch
+                          checked={quizData.certificateEnabled}
+                          onCheckedChange={(checked) => setQuizData({ ...quizData, certificateEnabled: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">{t.adaptiveTesting}</Label>
+                          <p className="text-xs text-muted-foreground">{t.adaptiveTestingDesc}</p>
+                        </div>
+                        <Switch
+                          checked={quizData.adaptiveTesting}
+                          onCheckedChange={(checked) => setQuizData({ ...quizData, adaptiveTesting: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">{t.randomizeQuestions}</Label>
+                          <p className="text-xs text-muted-foreground">{t.randomizeQuestionsDesc}</p>
+                        </div>
+                        <Switch
+                          checked={quizData.randomizeQuestions}
+                          onCheckedChange={(checked) => setQuizData({ ...quizData, randomizeQuestions: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">
+                            {language === "km" ? "ច្របល់ជម្រើសចម្លើយ" : "Shuffle Answer Options"}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {language === "km"
+                              ? "ច្របល់លំដាប់ជម្រើសសម្រាប់សិស្សនីមួយៗ"
+                              : "Randomize option order for each student"}
+                          </p>
+                        </div>
+                        <Switch
+                          checked={quizData.shuffleOptions}
+                          onCheckedChange={(checked) => setQuizData({ ...quizData, shuffleOptions: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">{t.allowMultipleAttempts}</Label>
+                          <p className="text-xs text-muted-foreground">{t.allowMultipleAttemptsDesc}</p>
+                        </div>
+                        <Switch
+                          checked={quizData.allowMultipleAttempts}
+                          onCheckedChange={(checked) => setQuizData({ ...quizData, allowMultipleAttempts: checked })}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium">{t.showCorrectAnswers}</Label>
+                          <p className="text-xs text-muted-foreground">{t.showCorrectAnswersDesc}</p>
+                        </div>
+                        <Switch
+                          checked={quizData.showCorrectAnswers}
+                          onCheckedChange={(checked) => setQuizData({ ...quizData, showCorrectAnswers: checked })}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
 
