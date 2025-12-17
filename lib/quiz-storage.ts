@@ -283,12 +283,53 @@ export const quizStorage = {
     }
   },
 
-  // ==================== ATTEMPTS ====================
+  // ==================== QUIZ ATTEMPTS (Enhanced with Randomization) ====================
+
+  /**
+   * Create a new quiz attempt with randomized question order
+   */
+  createAttempt: async (data: {
+    quiz_id: string
+    user_id: string
+    question_order: string[]
+    max_score: number
+    time_limit?: number
+    ip_address?: string
+    user_agent?: string
+  }) => {
+    const { data: attempt, error } = await supabase
+      .from('quiz_attempts')
+      .insert({
+        quiz_id: data.quiz_id,
+        user_id: data.user_id,
+        question_order: data.question_order,
+        answers: {},
+        max_score: data.max_score,
+        time_limit: data.time_limit,
+        status: 'in_progress',
+        started_at: new Date().toISOString(),
+        ip_address: data.ip_address,
+        user_agent: data.user_agent
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating attempt:', error)
+      throw error
+    }
+
+    return attempt
+  },
+
+  /**
+   * Get all attempts (admin view)
+   */
   getAttempts: async (): Promise<QuizAttempt[]> => {
     const { data, error } = await supabase
       .from('quiz_attempts')
       .select('*')
-      .order('completed_at', { ascending: false })
+      .order('started_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching attempts:', error)
@@ -299,20 +340,122 @@ export const quizStorage = {
       id: attempt.id,
       quizId: attempt.quiz_id,
       userId: attempt.user_id,
+      questionOrder: attempt.question_order,
       answers: attempt.answers,
       score: attempt.score,
       maxScore: attempt.max_score,
+      percentage: attempt.percentage,
+      status: attempt.status,
       startedAt: attempt.started_at,
       completedAt: attempt.completed_at,
-      timeSpent: attempt.time_spent
+      timeSpent: attempt.time_spent,
+      timeLimit: attempt.time_limit
     }))
   },
 
-  saveAttempts: async (attempts: QuizAttempt[]) => {
-    console.warn('saveAttempts is deprecated with Supabase')
+  /**
+   * Get a specific attempt by ID with full details
+   */
+  getAttemptById: async (attemptId: string) => {
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .select(`
+        *,
+        quizzes!inner (
+          id,
+          title,
+          title_km,
+          description,
+          description_km,
+          questions,
+          passing_score,
+          show_correct_answers,
+          certificate_enabled,
+          category_id,
+          categories (
+            id,
+            name,
+            name_km,
+            icon
+          )
+        ),
+        users!inner (
+          id,
+          name,
+          name_km,
+          email
+        )
+      `)
+      .eq('id', attemptId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching attempt:', error)
+      throw error
+    }
+
+    return data
   },
 
+  /**
+   * Update an attempt (for submitting answers or updating progress)
+   */
+  updateAttempt: async (attemptId: string, updates: {
+    answers?: any
+    score?: number
+    status?: string
+    completed_at?: string
+    time_spent?: number
+  }) => {
+    const updateData: any = {}
+    if (updates.answers !== undefined) updateData.answers = updates.answers
+    if (updates.score !== undefined) updateData.score = updates.score
+    if (updates.status !== undefined) updateData.status = updates.status
+    if (updates.completed_at !== undefined) updateData.completed_at = updates.completed_at
+    if (updates.time_spent !== undefined) updateData.time_spent = updates.time_spent
+
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .update(updateData)
+      .eq('id', attemptId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating attempt:', error)
+      throw error
+    }
+
+    return data
+  },
+
+  /**
+   * Delete an attempt
+   */
+  deleteAttempt: async (attemptId: string) => {
+    const { error } = await supabase
+      .from('quiz_attempts')
+      .delete()
+      .eq('id', attemptId)
+
+    if (error) {
+      console.error('Error deleting attempt:', error)
+      throw error
+    }
+  },
+
+  /**
+   * @deprecated Use createAttempt instead
+   */
+  saveAttempts: async (attempts: QuizAttempt[]) => {
+    console.warn('saveAttempts is deprecated with Supabase - use createAttempt instead')
+  },
+
+  /**
+   * @deprecated Use createAttempt instead
+   */
   addAttempt: async (attempt: QuizAttempt) => {
+    console.warn('addAttempt is deprecated - use createAttempt instead')
     const { error } = await supabase
       .from('quiz_attempts')
       .insert({

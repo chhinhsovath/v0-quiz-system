@@ -1,0 +1,410 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useI18n } from "@/lib/i18n-context"
+import { NavHeader } from "@/components/nav-header"
+import type { Question } from "@/lib/quiz-types"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+
+export default function TakeQuizPage() {
+  const params = useParams()
+  const router = useRouter()
+  const { user } = useAuth()
+  const { language, t } = useI18n()
+
+  // Attempt data
+  const [attemptId, setAttemptId] = useState<string | null>(null)
+  const [quizInfo, setQuizInfo] = useState<any>(null)
+  const [questions, setQuestions] = useState<Question[]>([])
+
+  // Quiz state
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, any>>({})
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
+  const [startTime, setStartTime] = useState<Date | null>(null)
+
+  // UI state
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Initialize quiz attempt
+  useEffect(() => {
+    if (!user) {
+      router.push("/")
+      return
+    }
+
+    const startQuizAttempt = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const response = await fetch('/api/quiz-attempts/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quiz_id: params.id,
+            user_id: user.id
+          })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          if (data.existing_attempt_id) {
+            // Redirect to existing attempt result
+            router.push(`/quizzes/result/${data.existing_attempt_id}`)
+            return
+          }
+          throw new Error(data.error || 'Failed to start quiz')
+        }
+
+        setAttemptId(data.attempt.id)
+        setQuizInfo(data.quiz_info)
+        setQuestions(data.questions)
+        setStartTime(new Date(data.attempt.started_at))
+
+        if (data.attempt.time_limit) {
+          setTimeRemaining(data.attempt.time_limit)
+        }
+      } catch (err: any) {
+        console.error('Error starting quiz:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    startQuizAttempt()
+  }, [params.id, user, router])
+
+  // Timer countdown
+  useEffect(() => {
+    if (timeRemaining === null || timeRemaining <= 0 || submitting) return
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev === null || prev <= 1) {
+          handleAutoSubmit()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [timeRemaining, submitting])
+
+  const currentQuestion = questions[currentQuestionIndex]
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100
+
+  const handleAnswerChange = (questionId: string, answer: any) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }))
+  }
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1)
+    }
+  }
+
+  const handleAutoSubmit = async () => {
+    if (submitting) return
+    await handleSubmit(true)
+  }
+
+  const handleSubmit = async (isAutoSubmit = false) => {
+    if (submitting) return
+
+    if (!isAutoSubmit) {
+      const unanswered = questions.filter(q => !answers[q.id]).length
+      if (unanswered > 0) {
+        const confirm = window.confirm(
+          language === 'km'
+            ? `អ្នកមានសំណួរ ${unanswered} ដែលមិនទាន់ឆ្លើយ។ តើអ្នកចង់ដាក់ស្នើទេ?`
+            : `You have ${unanswered} unanswered questions. Do you want to submit anyway?`
+        )
+        if (!confirm) return
+      }
+    }
+
+    try {
+      setSubmitting(true)
+
+      const response = await fetch('/api/quiz-attempts/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attempt_id: attemptId,
+          answers
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit quiz')
+      }
+
+      // Redirect to results page
+      router.push(`/quizzes/result/${attemptId}`)
+    } catch (err: any) {
+      console.error('Error submitting quiz:', err)
+      setError(err.message)
+      setSubmitting(false)
+    }
+  }
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <NavHeader />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <NavHeader />
+        <main className="container mx-auto px-4 py-8">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button onClick={() => router.push('/quizzes')} className="mt-4">
+            {t.backToQuizzes || 'Back to Quizzes'}
+          </Button>
+        </main>
+      </div>
+    )
+  }
+
+  if (!currentQuestion) {
+    return null
+  }
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      <NavHeader />
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Quiz Header */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl">
+                    {language === 'km' && quizInfo?.title_km ? quizInfo.title_km : quizInfo?.title}
+                  </CardTitle>
+                  <CardDescription>
+                    {language === 'km' ? 'សំណួរ' : 'Question'} {currentQuestionIndex + 1} {language === 'km' ? 'នៃ' : 'of'} {questions.length}
+                  </CardDescription>
+                </div>
+                {timeRemaining !== null && (
+                  <div className={`flex items-center gap-2 ${timeRemaining < 60 ? 'text-destructive' : ''}`}>
+                    <Clock className="h-5 w-5" />
+                    <span className="text-lg font-mono font-bold">{formatTime(timeRemaining)}</span>
+                  </div>
+                )}
+              </div>
+              <Progress value={progress} className="mt-4" />
+            </CardHeader>
+          </Card>
+
+          {/* Question Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {language === 'km' && currentQuestion.questionKm
+                  ? currentQuestion.questionKm
+                  : currentQuestion.question}
+              </CardTitle>
+              <CardDescription>
+                {currentQuestion.points} {language === 'km' ? 'ពិន្ទុ' : 'points'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Render question based on type */}
+              {renderQuestionInput(currentQuestion, answers[currentQuestion.id], handleAnswerChange, language)}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={currentQuestionIndex === 0}
+                >
+                  {language === 'km' ? 'មុន' : 'Previous'}
+                </Button>
+
+                {currentQuestionIndex === questions.length - 1 ? (
+                  <Button onClick={() => handleSubmit(false)} disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {language === 'km' ? 'កំពុងដាក់ស្នើ...' : 'Submitting...'}
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        {language === 'km' ? 'ដាក់ស្នើ' : 'Submit Quiz'}
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button onClick={handleNext}>
+                    {language === 'km' ? 'បន្ទាប់' : 'Next'}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Progress Indicator */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {questions.map((q, idx) => (
+              <button
+                key={q.id}
+                onClick={() => setCurrentQuestionIndex(idx)}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                  idx === currentQuestionIndex
+                    ? 'bg-primary text-primary-foreground'
+                    : answers[q.id]
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function renderQuestionInput(
+  question: Question,
+  answer: any,
+  onChange: (questionId: string, answer: any) => void,
+  language: string
+) {
+  const options = language === 'km' && question.optionsKm ? question.optionsKm : question.options
+
+  switch (question.type) {
+    case 'multiple-choice':
+      return (
+        <RadioGroup value={answer || ''} onValueChange={(val) => onChange(question.id, val)}>
+          {options?.map((option, idx) => (
+            <div key={idx} className="flex items-center space-x-2 mb-2">
+              <RadioGroupItem value={option} id={`${question.id}-${idx}`} />
+              <Label htmlFor={`${question.id}-${idx}`} className="cursor-pointer">{option}</Label>
+            </div>
+          ))}
+        </RadioGroup>
+      )
+
+    case 'multiple-select':
+      const selectedOptions = answer || []
+      return (
+        <div className="space-y-2">
+          {options?.map((option, idx) => (
+            <div key={idx} className="flex items-center space-x-2">
+              <Checkbox
+                id={`${question.id}-${idx}`}
+                checked={selectedOptions.includes(option)}
+                onCheckedChange={(checked) => {
+                  const newSelection = checked
+                    ? [...selectedOptions, option]
+                    : selectedOptions.filter((o: string) => o !== option)
+                  onChange(question.id, newSelection)
+                }}
+              />
+              <Label htmlFor={`${question.id}-${idx}`} className="cursor-pointer">{option}</Label>
+            </div>
+          ))}
+        </div>
+      )
+
+    case 'true-false':
+      return (
+        <RadioGroup value={answer || ''} onValueChange={(val) => onChange(question.id, val)}>
+          <div className="flex items-center space-x-2 mb-2">
+            <RadioGroupItem value="true" id={`${question.id}-true`} />
+            <Label htmlFor={`${question.id}-true`} className="cursor-pointer">
+              {language === 'km' ? 'ត្រូវ' : 'True'}
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="false" id={`${question.id}-false`} />
+            <Label htmlFor={`${question.id}-false`} className="cursor-pointer">
+              {language === 'km' ? 'ខុស' : 'False'}
+            </Label>
+          </div>
+        </RadioGroup>
+      )
+
+    case 'short-answer':
+      return (
+        <Input
+          value={answer || ''}
+          onChange={(e) => onChange(question.id, e.target.value)}
+          placeholder={language === 'km' ? 'វាយចម្លើយរបស់អ្នក...' : 'Type your answer...'}
+        />
+      )
+
+    case 'essay':
+      return (
+        <Textarea
+          value={answer || ''}
+          onChange={(e) => onChange(question.id, e.target.value)}
+          placeholder={language === 'km' ? 'សរសេរចម្លើយរបស់អ្នក...' : 'Write your answer...'}
+          rows={6}
+        />
+      )
+
+    default:
+      return (
+        <div className="text-muted-foreground">
+          {language === 'km'
+            ? `ប្រភេទសំណួរ "${question.type}" មិនទាន់បានគាំទ្រនៅឡើយ`
+            : `Question type "${question.type}" not yet supported`}
+        </div>
+      )
+  }
+}
