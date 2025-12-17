@@ -65,6 +65,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewQuestionIndex, setPreviewQuestionIndex] = useState(0)
+  const [selectedBankId, setSelectedBankId] = useState<string | null>(null)
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!isAdmin) {
@@ -120,6 +122,61 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
     setQuestions([...questions, ...newQuestions])
     toast.success(`Added ${newQuestions.length} questions from question bank`)
+  }
+
+  const toggleQuestionSelection = (questionId: string) => {
+    const newSelection = new Set(selectedQuestionIds)
+    if (newSelection.has(questionId)) {
+      newSelection.delete(questionId)
+    } else {
+      newSelection.add(questionId)
+    }
+    setSelectedQuestionIds(newSelection)
+  }
+
+  const selectAllQuestionsInBank = (bankId: string) => {
+    const bank = questionBanks.find((b) => b.id === bankId)
+    if (!bank) return
+
+    const newSelection = new Set(selectedQuestionIds)
+    bank.questions.forEach((q: Question) => newSelection.add(q.id))
+    setSelectedQuestionIds(newSelection)
+  }
+
+  const deselectAllQuestionsInBank = (bankId: string) => {
+    const bank = questionBanks.find((b) => b.id === bankId)
+    if (!bank) return
+
+    const newSelection = new Set(selectedQuestionIds)
+    bank.questions.forEach((q: Question) => newSelection.delete(q.id))
+    setSelectedQuestionIds(newSelection)
+  }
+
+  const importSelectedQuestions = () => {
+    if (selectedQuestionIds.size === 0) {
+      toast.warning(language === "km" ? "សូមជ្រើសរើសសំណួរយ៉ាងហោចណាស់មួយ" : "Please select at least one question")
+      return
+    }
+
+    const selectedBank = questionBanks.find((b) => b.id === selectedBankId)
+    if (!selectedBank) return
+
+    const questionsToImport = selectedBank.questions.filter((q: Question) => selectedQuestionIds.has(q.id))
+
+    // Add new questions with unique IDs
+    const newQuestions = questionsToImport.map((q: any) => ({
+      ...q,
+      id: crypto.randomUUID() // Generate new ID to avoid conflicts
+    }))
+
+    setQuestions([...questions, ...newQuestions])
+    toast.success(`${language === "km" ? "បានបន្ថែម" : "Added"} ${newQuestions.length} ${language === "km" ? "សំណួរ" : "questions"}`)
+
+    // Reset selection and close dialog
+    setSelectedQuestionIds(new Set())
+    setSelectedBankId(null)
+    setIsQuestionDialogOpen(false)
+    setShowTypeSelector(false)
   }
 
   const addQuestion = () => {
@@ -987,7 +1044,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                               </div>
                             </div>
                           ) : (
-                            <div className="max-w-2xl mx-auto space-y-6">
+                            <div className="space-y-6">
                               <div className="flex items-center justify-between">
                                 <div>
                                   <h3 className="text-lg font-semibold">
@@ -995,8 +1052,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                                   </h3>
                                   <p className="text-sm text-muted-foreground">
                                     {language === "km"
-                                      ? "ជ្រើសរើសធនាគារសំណួរដើម្បីបន្ថែមសំណួរទៅក្នុងតេស្តរបស់អ្នក"
-                                      : "Select a question bank to add questions to your quiz"}
+                                      ? "ជ្រើសរើសសំណួរពីធនាគារសំណួររបស់អ្នក"
+                                      : "Select questions from your question banks"}
                                   </p>
                                 </div>
                                 <Button
@@ -1009,65 +1066,134 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                                 </Button>
                               </div>
 
-                              <div className="grid gap-4">
-                                <div className="space-y-2">
-                                  <Label>
-                                    {language === "km" ? "ជ្រើសរើសធនាគារសំណួរ" : "Select Question Bank"}
-                                  </Label>
-                                  <Select onValueChange={(bankId) => {
-                                    addQuestionsFromBank(bankId)
-                                    setIsQuestionDialogOpen(false)
-                                    setShowTypeSelector(false)
-                                  }}>
-                                    <SelectTrigger className="h-12">
-                                      <SelectValue placeholder={
-                                        language === "km" ? "ជ្រើសរើសធនាគារ..." : "Choose a question bank..."
-                                      } />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {questionBanks.map((bank: any) => (
-                                        <SelectItem key={bank.id} value={bank.id}>
-                                          <div className="flex items-center justify-between w-full">
-                                            <span className="font-medium">
-                                              {language === "km" && bank.nameKm ? bank.nameKm : bank.name}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground ml-3">
-                                              ({bank.questions?.length || 0} {language === "km" ? "សំណួរ" : "questions"})
-                                            </span>
+                              {/* Question Banks List */}
+                              <div className="space-y-3">
+                                {questionBanks.map((bank: any) => (
+                                  <Card key={bank.id} className={`border-2 transition-all ${selectedBankId === bank.id ? "border-primary" : ""}`}>
+                                    <CardHeader className="pb-3">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <CardTitle className="text-base flex items-center gap-2">
+                                            <Database className="h-4 w-4" />
+                                            {language === "km" && bank.nameKm ? bank.nameKm : bank.name}
+                                          </CardTitle>
+                                          <p className="text-sm text-muted-foreground mt-1">
+                                            {bank.questions?.length || 0} {language === "km" ? "សំណួរ" : "questions"}
+                                            {bank.subject && ` • ${bank.subject}`}
+                                            {bank.gradeLevel && ` • ${bank.gradeLevel}`}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          variant={selectedBankId === bank.id ? "default" : "outline"}
+                                          size="sm"
+                                          onClick={() => {
+                                            if (selectedBankId === bank.id) {
+                                              setSelectedBankId(null)
+                                              deselectAllQuestionsInBank(bank.id)
+                                            } else {
+                                              setSelectedBankId(bank.id)
+                                            }
+                                          }}
+                                        >
+                                          {selectedBankId === bank.id
+                                            ? (language === "km" ? "បិទ" : "Close")
+                                            : (language === "km" ? "មើលសំណួរ" : "View Questions")}
+                                        </Button>
+                                      </div>
+                                    </CardHeader>
+
+                                    {selectedBankId === bank.id && (
+                                      <CardContent className="space-y-3">
+                                        {/* Select All / Deselect All */}
+                                        <div className="flex items-center justify-between py-2 border-t">
+                                          <span className="text-sm font-medium">
+                                            {selectedQuestionIds.size} {language === "km" ? "បានជ្រើសរើស" : "selected"}
+                                          </span>
+                                          <div className="flex gap-2">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => selectAllQuestionsInBank(bank.id)}
+                                            >
+                                              {language === "km" ? "ជ្រើសរើសទាំងអស់" : "Select All"}
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => deselectAllQuestionsInBank(bank.id)}
+                                            >
+                                              {language === "km" ? "លុបចោលទាំងអស់" : "Deselect All"}
+                                            </Button>
                                           </div>
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>
-                                    {language === "km" ? "ទំហំបណ្តុំចៃដន្យ (0 = ទាំងអស់)" : "Random Pool Size (0 = all)"}
-                                  </Label>
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    placeholder="0"
-                                    className="h-12"
-                                    value={quizData.randomPoolSize || ""}
-                                    onChange={(e) => setQuizData({ ...quizData, randomPoolSize: Number.parseInt(e.target.value) || 0 })}
-                                  />
-                                  <p className="text-xs text-muted-foreground">
-                                    {language === "km"
-                                      ? "ប្រសិនបើបានកំណត់ នឹងជ្រើសរើសសំណួរចៃដន្យចំនួននេះពីធនាគារ"
-                                      : "If set, will randomly select this many questions from the bank"}
-                                  </p>
-                                </div>
+                                        </div>
+
+                                        {/* Questions List with Checkboxes */}
+                                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                                          {bank.questions && bank.questions.length > 0 ? (
+                                            bank.questions.map((q: Question, idx: number) => (
+                                              <div
+                                                key={q.id}
+                                                className="flex items-start gap-3 p-3 border rounded hover:bg-muted/50 transition-colors cursor-pointer"
+                                                onClick={() => toggleQuestionSelection(q.id)}
+                                              >
+                                                <Checkbox
+                                                  checked={selectedQuestionIds.has(q.id)}
+                                                  onCheckedChange={() => toggleQuestionSelection(q.id)}
+                                                  className="mt-1"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-xs font-semibold text-muted-foreground">
+                                                      Q{idx + 1}
+                                                    </span>
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                                      {q.type}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                      {q.points} {language === "km" ? "ពិន្ទុ" : "pts"}
+                                                    </span>
+                                                  </div>
+                                                  <p className="text-sm line-clamp-2">
+                                                    {language === "km" && q.questionKm ? q.questionKm : q.question}
+                                                  </p>
+                                                  {q.options && q.options.length > 0 && (
+                                                    <div className="mt-1 text-xs text-muted-foreground">
+                                                      {q.options.slice(0, 2).map((opt, i) => (
+                                                        <div key={i} className="truncate">• {opt}</div>
+                                                      ))}
+                                                      {q.options.length > 2 && (
+                                                        <div>... +{q.options.length - 2} {language === "km" ? "ច្រើនទៀត" : "more"}</div>
+                                                      )}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <p className="text-center py-8 text-muted-foreground text-sm">
+                                              {language === "km" ? "មិនមានសំណួរក្នុងធនាគារនេះ" : "No questions in this bank"}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </CardContent>
+                                    )}
+                                  </Card>
+                                ))}
                               </div>
 
-                              <div className="flex items-center gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
-                                <Database className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                                <p className="text-sm text-blue-700 dark:text-blue-300">
-                                  {language === "km"
-                                    ? "សំណួរដែលនាំចូលពីធនាគារនឹងត្រូវបានបន្ថែមទៅតេស្តរបស់អ្នក។ អ្នកអាចកែសម្រួលវាបានបន្ទាប់ពីនាំចូល។"
-                                    : "Questions imported from banks will be added to your quiz. You can edit them individually after import."}
-                                </p>
-                              </div>
+                              {/* Import Button */}
+                              {selectedQuestionIds.size > 0 && (
+                                <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t pt-4">
+                                  <Button
+                                    onClick={importSelectedQuestions}
+                                    className="w-full h-12"
+                                    size="lg"
+                                  >
+                                    <Plus className="h-5 w-5 mr-2" />
+                                    {language === "km" ? "នាំចូល" : "Import"} {selectedQuestionIds.size} {language === "km" ? "សំណួរ" : "Questions"}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
