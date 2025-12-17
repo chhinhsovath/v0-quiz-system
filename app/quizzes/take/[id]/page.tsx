@@ -448,6 +448,7 @@ function renderQuestionInput(
       )
 
     case 'ordering':
+    case 'drag-drop':
       // Simple text-based ordering (for basic support)
       return (
         <div className="space-y-2">
