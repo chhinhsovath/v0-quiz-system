@@ -15,8 +15,12 @@ export async function seedDemoDataSupabase() {
     const categoryIdMap = new Map<string, string>() // Map old IDs to new UUIDs
 
     // Get existing data
-    const existingCategories = await quizStorage.getCategories()
-    const existingQuizzes = await quizStorage.getQuizzes()
+    const existingCategoriesResult = await quizStorage.getCategories()
+    const existingQuizzesResult = await quizStorage.getQuizzes()
+
+    // Ensure we have arrays
+    const existingCategories = Array.isArray(existingCategoriesResult) ? existingCategoriesResult : []
+    const existingQuizzes = Array.isArray(existingQuizzesResult) ? existingQuizzesResult : []
 
     // Seed Categories
     for (const category of seedCategories) {
