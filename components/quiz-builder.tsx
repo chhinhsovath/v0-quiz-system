@@ -59,6 +59,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false)
   const [showTypeSelector, setShowTypeSelector] = useState(false)
+  const [addQuestionTab, setAddQuestionTab] = useState<"types" | "banks">("types")
   const [questionSortOrder, setQuestionSortOrder] = useState<"newest" | "oldest">("newest")
   const [questionsPerPage, setQuestionsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
@@ -132,6 +133,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     }
     setEditingQuestion(newQuestion)
     setShowTypeSelector(true) // Show type selector for new questions
+    setAddQuestionTab("types") // Default to Question Types tab
     setIsQuestionDialogOpen(true)
   }
 
@@ -681,103 +683,6 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
               </CardContent>
             </Card>
 
-            {/* Question Banks - Always Show */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>
-                      {language === "km" ? "ធនាគារសំណួរ" : "Question Banks"}
-                    </CardTitle>
-                    <CardDescription>
-                      {language === "km"
-                        ? "នាំចូលសំណួរពីធនាគារសំណួររបស់អ្នក"
-                        : "Import questions from your question banks"}
-                    </CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open("/admin/question-banks", "_blank")}
-                  >
-                    <Database className="h-4 w-4 mr-2" />
-                    {language === "km" ? "គ្រប់គ្រងធនាគារ" : "Manage Banks"}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {questionBanks.length === 0 ? (
-                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                    <Database className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <h3 className="font-semibold mb-2">
-                      {language === "km" ? "មិនទាន់មានធនាគារសំណួរ" : "No Question Banks Yet"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {language === "km"
-                        ? "បង្កើតធនាគារសំណួរដើម្បីប្រើសំណួរឡើងវិញនៅក្នុងតេស្តជាច្រើន"
-                        : "Create question banks to reuse questions across multiple quizzes"}
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => router.push("/admin/question-banks")}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      {language === "km" ? "បង្កើតធនាគារសំណួរ" : "Create Question Bank"}
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>
-                          {language === "km" ? "ជ្រើសរើសធនាគារសំណួរ" : "Select Question Bank"}
-                        </Label>
-                        <Select onValueChange={addQuestionsFromBank}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={
-                              language === "km" ? "ជ្រើសរើសធនាគារ..." : "Choose a question bank..."
-                            } />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {questionBanks.map((bank: any) => (
-                              <SelectItem key={bank.id} value={bank.id}>
-                                {language === "km" && bank.nameKm ? bank.nameKm : bank.name} ({bank.questions?.length || 0} {language === "km" ? "សំណួរ" : "questions"})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>
-                          {language === "km" ? "ទំហំបណ្តុំចៃដន្យ (0 = ទាំងអស់)" : "Random Pool Size (0 = all)"}
-                        </Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          value={quizData.randomPoolSize || ""}
-                          onChange={(e) => setQuizData({ ...quizData, randomPoolSize: Number.parseInt(e.target.value) || 0 })}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {language === "km"
-                            ? "ប្រសិនបើបានកំណត់ នឹងជ្រើសរើសសំណួរចៃដន្យចំនួននេះពីធនាគារ"
-                            : "If set, will randomly select this many questions from the bank"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                      <Database className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        {language === "km"
-                          ? "សំណួរដែលនាំចូលពីធនាគារនឹងត្រូវបានបន្ថែមទៅតេស្តរបស់អ្នក។ អ្នកអាចកែសម្រួលវាបានបន្ទាប់ពីនាំចូល។"
-                          : "Questions imported from banks will be added to your quiz. You can edit them individually after import."}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
             {/* Questions - Compact List with Pagination */}
             <Card>
               <CardHeader>
@@ -1010,31 +915,164 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 <DialogHeader>
                   <DialogTitle className="text-2xl">
                     {showTypeSelector
-                      ? "Choose Question Type"
+                      ? (language === "km" ? "បន្ថែមសំណួរ" : "Add Question")
                       : editingQuestion && questions.find(q => q.id === editingQuestion.id)
-                      ? `Edit Question ${questions.findIndex(q => q.id === editingQuestion.id) + 1}`
-                      : "Add New Question"}
+                      ? `${language === "km" ? "កែសម្រួលសំណួរ" : "Edit Question"} ${questions.findIndex(q => q.id === editingQuestion.id) + 1}`
+                      : (language === "km" ? "បន្ថែមសំណួរថ្មី" : "Add New Question")}
                   </DialogTitle>
                   {showTypeSelector && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Select the question type that best fits your needs. Each type has unique features and difficulty levels.
+                      {language === "km"
+                        ? "ជ្រើសរើសប្រភេទសំណួរ ឬនាំចូលសំណួរពីធនាគារសំណួររបស់អ្នក"
+                        : "Choose a question type to create or import questions from your question banks"}
                     </p>
                   )}
                 </DialogHeader>
 
                 <div className="min-h-[80vh]">
                   {showTypeSelector && editingQuestion ? (
-                    <div className="py-8">
-                      <QuestionTypeSelector
-                        value={editingQuestion.type}
-                        onChange={(type) => {
-                          // Update the question type and show the editor
-                          updateEditingQuestion({ type })
-                          setShowTypeSelector(false)
-                        }}
-                        t={t}
-                      />
-                    </div>
+                    <Tabs value={addQuestionTab} onValueChange={(value: any) => setAddQuestionTab(value)} className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="types">
+                          {language === "km" ? "ប្រភេទសំណួរ" : "Question Types"}
+                        </TabsTrigger>
+                        <TabsTrigger value="banks">
+                          <Database className="h-4 w-4 mr-2" />
+                          {language === "km" ? "ធនាគារសំណួរ" : "Question Banks"}
+                        </TabsTrigger>
+                      </TabsList>
+
+                      {/* Question Types Tab */}
+                      <TabsContent value="types" className="py-8">
+                        <QuestionTypeSelector
+                          value={editingQuestion.type}
+                          onChange={(type) => {
+                            // Update the question type and show the editor
+                            updateEditingQuestion({ type })
+                            setShowTypeSelector(false)
+                          }}
+                          t={t}
+                        />
+                      </TabsContent>
+
+                      {/* Question Banks Tab */}
+                      <TabsContent value="banks" className="py-8">
+                        <div className="space-y-6">
+                          {questionBanks.length === 0 ? (
+                            <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                              <Database className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">
+                                {language === "km" ? "មិនទាន់មានធនាគារសំណួរ" : "No Question Banks Yet"}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                                {language === "km"
+                                  ? "បង្កើតធនាគារសំណួរដើម្បីប្រើសំណួរឡើងវិញនៅក្នុងតេស្តជាច្រើន"
+                                  : "Create question banks to reuse questions across multiple quizzes"}
+                              </p>
+                              <div className="flex gap-3 justify-center">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => router.push("/admin/question-banks")}
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  {language === "km" ? "បង្កើតធនាគារសំណួរ" : "Create Question Bank"}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => window.open("/admin/question-banks", "_blank")}
+                                >
+                                  <Database className="h-4 w-4 mr-2" />
+                                  {language === "km" ? "គ្រប់គ្រងធនាគារ" : "Manage Banks"}
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="max-w-2xl mx-auto space-y-6">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-lg font-semibold">
+                                    {language === "km" ? "នាំចូលសំណួរពីធនាគារ" : "Import Questions from Banks"}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {language === "km"
+                                      ? "ជ្រើសរើសធនាគារសំណួរដើម្បីបន្ថែមសំណួរទៅក្នុងតេស្តរបស់អ្នក"
+                                      : "Select a question bank to add questions to your quiz"}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open("/admin/question-banks", "_blank")}
+                                >
+                                  <Database className="h-4 w-4 mr-2" />
+                                  {language === "km" ? "គ្រប់គ្រង" : "Manage"}
+                                </Button>
+                              </div>
+
+                              <div className="grid gap-4">
+                                <div className="space-y-2">
+                                  <Label>
+                                    {language === "km" ? "ជ្រើសរើសធនាគារសំណួរ" : "Select Question Bank"}
+                                  </Label>
+                                  <Select onValueChange={(bankId) => {
+                                    addQuestionsFromBank(bankId)
+                                    setIsQuestionDialogOpen(false)
+                                    setShowTypeSelector(false)
+                                  }}>
+                                    <SelectTrigger className="h-12">
+                                      <SelectValue placeholder={
+                                        language === "km" ? "ជ្រើសរើសធនាគារ..." : "Choose a question bank..."
+                                      } />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {questionBanks.map((bank: any) => (
+                                        <SelectItem key={bank.id} value={bank.id}>
+                                          <div className="flex items-center justify-between w-full">
+                                            <span className="font-medium">
+                                              {language === "km" && bank.nameKm ? bank.nameKm : bank.name}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground ml-3">
+                                              ({bank.questions?.length || 0} {language === "km" ? "សំណួរ" : "questions"})
+                                            </span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>
+                                    {language === "km" ? "ទំហំបណ្តុំចៃដន្យ (0 = ទាំងអស់)" : "Random Pool Size (0 = all)"}
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    className="h-12"
+                                    value={quizData.randomPoolSize || ""}
+                                    onChange={(e) => setQuizData({ ...quizData, randomPoolSize: Number.parseInt(e.target.value) || 0 })}
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    {language === "km"
+                                      ? "ប្រសិនបើបានកំណត់ នឹងជ្រើសរើសសំណួរចៃដន្យចំនួននេះពីធនាគារ"
+                                      : "If set, will randomly select this many questions from the bank"}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
+                                <Database className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                  {language === "km"
+                                    ? "សំណួរដែលនាំចូលពីធនាគារនឹងត្រូវបានបន្ថែមទៅតេស្តរបស់អ្នក។ អ្នកអាចកែសម្រួលវាបានបន្ទាប់ពីនាំចូល។"
+                                    : "Questions imported from banks will be added to your quiz. You can edit them individually after import."}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   ) : (
                     editingQuestion && (
                       <QuestionEditor
@@ -1055,11 +1093,13 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 {!showTypeSelector && (
                   <DialogFooter className="gap-2">
                     <Button variant="outline" onClick={cancelQuestionEdit}>
-                      Cancel
+                      {language === "km" ? "បោះបង់" : "Cancel"}
                     </Button>
                     <Button onClick={saveQuestion} disabled={!editingQuestion?.question?.trim()}>
                       <Save className="h-4 w-4 mr-2" />
-                      {editingQuestion && questions.find(q => q.id === editingQuestion.id) ? "Update Question" : "Add Question"}
+                      {editingQuestion && questions.find(q => q.id === editingQuestion.id)
+                        ? (language === "km" ? "ធ្វើបច្ចុប្បន្នភាពសំណួរ" : "Update Question")
+                        : (language === "km" ? "បន្ថែមសំណួរ" : "Add Question")}
                     </Button>
                   </DialogFooter>
                 )}
