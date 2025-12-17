@@ -20,6 +20,7 @@ import { ArrowLeft, Plus, Trash2, GripVertical, MoveVertical, ImageIcon, Save, D
 import { useRouter } from "next/navigation"
 import { ImageUpload } from "@/components/image-upload"
 import { useToast } from "@/components/ui/toast-notification"
+import { QuestionTypeSelector } from "@/components/question-type-selector"
 
 interface QuizBuilderProps {
   initialQuiz?: Quiz
@@ -56,6 +57,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const [questions, setQuestions] = useState<Question[]>(initialQuiz?.questions || [])
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false)
+  const [showTypeSelector, setShowTypeSelector] = useState(false)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -123,11 +125,13 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       points: 1,
     }
     setEditingQuestion(newQuestion)
+    setShowTypeSelector(true) // Show type selector for new questions
     setIsQuestionDialogOpen(true)
   }
 
   const editQuestion = (question: Question) => {
     setEditingQuestion({ ...question })
+    setShowTypeSelector(false) // Don't show type selector when editing
     setIsQuestionDialogOpen(true)
   }
 
@@ -171,7 +175,69 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
   const updateEditingQuestion = (updates: Partial<Question>) => {
     if (!editingQuestion) return
-    setEditingQuestion({ ...editingQuestion, ...updates })
+
+    // If type is being changed, set up appropriate fields
+    if (updates.type && updates.type !== editingQuestion.type) {
+      const type = updates.type
+      let options: string[] | undefined
+      let correctAnswer: string | string[] | Record<string, string> = ""
+      let blanksTemplate: string | undefined
+      let blanksCount: number | undefined
+      let pairs: Array<{ left: string; right: string }> | undefined
+      let imageUrl: string | undefined
+      let hotspots: Array<{ x: number; y: number; label: string }> | undefined
+
+      if (type === "multiple-choice" || type === "multiple-select") {
+        options = ["", "", "", ""]
+        correctAnswer = type === "multiple-select" ? [] : ""
+      } else if (type === "true-false") {
+        options = ["True", "False"]
+        correctAnswer = ""
+      } else if (type === "drag-drop") {
+        options = ["", "", "", ""]
+        correctAnswer = []
+      } else if (type === "fill-blanks") {
+        blanksTemplate = "The ___ is ___."
+        blanksCount = 2
+        correctAnswer = ["", ""]
+      } else if (type === "matching") {
+        pairs = [
+          { left: "", right: "" },
+          { left: "", right: "" },
+        ]
+        correctAnswer = {}
+      } else if (type === "ordering") {
+        options = ["", "", ""]
+        correctAnswer = []
+      } else if (type === "image-choice") {
+        options = ["", "", "", ""]
+        correctAnswer = ""
+        imageUrl = ""
+      } else if (type === "hotspot") {
+        imageUrl = ""
+        hotspots = []
+        correctAnswer = []
+      } else if (type === "essay") {
+        correctAnswer = ""
+      } else {
+        options = undefined
+        correctAnswer = ""
+      }
+
+      setEditingQuestion({
+        ...editingQuestion,
+        ...updates,
+        options,
+        correctAnswer,
+        blanksTemplate,
+        blanksCount,
+        pairs,
+        imageUrl,
+        hotspots,
+      })
+    } else {
+      setEditingQuestion({ ...editingQuestion, ...updates })
+    }
   }
 
   const deleteQuestion = (id: string) => {
@@ -702,37 +768,63 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
             <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
               if (!open) cancelQuestionEdit()
             }}>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>
-                    {editingQuestion && questions.find(q => q.id === editingQuestion.id)
+                  <DialogTitle className="text-2xl">
+                    {showTypeSelector
+                      ? "Choose Question Type"
+                      : editingQuestion && questions.find(q => q.id === editingQuestion.id)
                       ? `Edit Question ${questions.findIndex(q => q.id === editingQuestion.id) + 1}`
                       : "Add New Question"}
                   </DialogTitle>
+                  {showTypeSelector && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Select the question type that best fits your needs. Each type has unique features and difficulty levels.
+                    </p>
+                  )}
                 </DialogHeader>
 
-                {editingQuestion && (
-                  <QuestionEditor
-                    question={editingQuestion}
-                    index={questions.length}
-                    onUpdate={(_, updates) => updateEditingQuestion(updates)}
-                    onDelete={() => {}}
-                    onUpdateOption={(_, index, value) => updateQuestionOption(index, value)}
-                    onAddOption={() => addOption()}
-                    onRemoveOption={(_, index) => removeOption(index)}
-                    t={t}
-                  />
-                )}
+                <div className="min-h-[60vh]">
+                  {showTypeSelector && editingQuestion ? (
+                    <div className="py-6">
+                      <QuestionTypeSelector
+                        value={editingQuestion.type}
+                        onChange={(type) => {
+                          // Update the question type and show the editor
+                          updateEditingQuestion({ type })
+                          setShowTypeSelector(false)
+                        }}
+                        t={t}
+                      />
+                    </div>
+                  ) : (
+                    editingQuestion && (
+                      <QuestionEditor
+                        question={editingQuestion}
+                        index={questions.length}
+                        onUpdate={(_, updates) => updateEditingQuestion(updates)}
+                        onDelete={() => {}}
+                        onUpdateOption={(_, index, value) => updateQuestionOption(index, value)}
+                        onAddOption={() => addOption()}
+                        onRemoveOption={(_, index) => removeOption(index)}
+                        t={t}
+                        onChangeType={() => setShowTypeSelector(true)}
+                      />
+                    )
+                  )}
+                </div>
 
-                <DialogFooter className="gap-2">
-                  <Button variant="outline" onClick={cancelQuestionEdit}>
-                    Cancel
-                  </Button>
-                  <Button onClick={saveQuestion} disabled={!editingQuestion?.question?.trim()}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingQuestion && questions.find(q => q.id === editingQuestion.id) ? "Update Question" : "Add Question"}
-                  </Button>
-                </DialogFooter>
+                {!showTypeSelector && (
+                  <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={cancelQuestionEdit}>
+                      Cancel
+                    </Button>
+                    <Button onClick={saveQuestion} disabled={!editingQuestion?.question?.trim()}>
+                      <Save className="h-4 w-4 mr-2" />
+                      {editingQuestion && questions.find(q => q.id === editingQuestion.id) ? "Update Question" : "Add Question"}
+                    </Button>
+                  </DialogFooter>
+                )}
               </DialogContent>
             </Dialog>
           </div>
@@ -751,6 +843,7 @@ interface QuestionEditorProps {
   onAddOption: (questionId: string) => void
   onRemoveOption: (questionId: string, optionIndex: number) => void
   t: any
+  onChangeType?: () => void
 }
 
 function QuestionEditor({
@@ -762,6 +855,7 @@ function QuestionEditor({
   onAddOption,
   onRemoveOption,
   t,
+  onChangeType,
 }: QuestionEditorProps) {
   const handleTypeChange = (type: QuestionType) => {
     let options: string[] | undefined
@@ -829,24 +923,36 @@ function QuestionEditor({
             <GripVertical className="h-5 w-5 text-muted-foreground" />
             <div>
               <h3 className="font-semibold">{t.question} {index + 1}</h3>
-              <Select value={question.type} onValueChange={handleTypeChange}>
-                <SelectTrigger className="w-[200px] mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="multiple-choice">{t.multipleChoice}</SelectItem>
-                  <SelectItem value="multiple-select">{t.multipleSelect}</SelectItem>
-                  <SelectItem value="true-false">{t.trueFalse}</SelectItem>
-                  <SelectItem value="short-answer">{t.shortAnswer}</SelectItem>
-                  <SelectItem value="fill-blanks">{t.fillBlanks}</SelectItem>
-                  <SelectItem value="drag-drop">{t.dragDrop}</SelectItem>
-                  <SelectItem value="matching">{t.matching}</SelectItem>
-                  <SelectItem value="ordering">{t.ordering}</SelectItem>
-                  <SelectItem value="essay">{t.essay}</SelectItem>
-                  <SelectItem value="image-choice">{t.imageChoice}</SelectItem>
-                  <SelectItem value="hotspot">{t.hotspot}</SelectItem>
-                </SelectContent>
-              </Select>
+              {onChangeType ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-1"
+                  onClick={onChangeType}
+                >
+                  {t[question.type.replace(/-/g, "")] || question.type}
+                  <span className="ml-2 text-xs text-muted-foreground">• Click to change type</span>
+                </Button>
+              ) : (
+                <Select value={question.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="w-[200px] mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="multiple-choice">{t.multipleChoice}</SelectItem>
+                    <SelectItem value="multiple-select">{t.multipleSelect}</SelectItem>
+                    <SelectItem value="true-false">{t.trueFalse}</SelectItem>
+                    <SelectItem value="short-answer">{t.shortAnswer}</SelectItem>
+                    <SelectItem value="fill-blanks">{t.fillBlanks}</SelectItem>
+                    <SelectItem value="drag-drop">{t.dragDrop}</SelectItem>
+                    <SelectItem value="matching">{t.matching}</SelectItem>
+                    <SelectItem value="ordering">{t.ordering}</SelectItem>
+                    <SelectItem value="essay">{t.essay}</SelectItem>
+                    <SelectItem value="image-choice">{t.imageChoice}</SelectItem>
+                    <SelectItem value="hotspot">{t.hotspot}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <Button
