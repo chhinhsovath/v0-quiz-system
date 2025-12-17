@@ -419,6 +419,51 @@ function renderQuestionInput(
         />
       )
 
+    case 'fill-blank':
+      return (
+        <Input
+          value={answer || ''}
+          onChange={(e) => onChange(question.id, e.target.value)}
+          placeholder={language === 'km' ? 'បំពេញចម្លើយ' : 'Fill in the blank'}
+        />
+      )
+
+    case 'matching':
+      // Simple text-based matching (for basic support)
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            {language === 'km'
+              ? 'ផ្គូផ្គងធាតុដោយបញ្ចូលលេខចម្លើយ'
+              : 'Match items by entering answer numbers'}
+          </p>
+          <Textarea
+            value={answer || ''}
+            onChange={(e) => onChange(question.id, e.target.value)}
+            placeholder={language === 'km' ? 'បញ្ចូលចម្លើយរបស់អ្នក...' : 'Enter your answers...'}
+            rows={4}
+          />
+        </div>
+      )
+
+    case 'ordering':
+      // Simple text-based ordering (for basic support)
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            {language === 'km'
+              ? 'រៀបចំធាតុតាមលំដាប់ត្រឹមត្រូវ'
+              : 'Arrange items in correct order'}
+          </p>
+          <Textarea
+            value={answer || ''}
+            onChange={(e) => onChange(question.id, e.target.value)}
+            placeholder={language === 'km' ? 'បញ្ចូលលំដាប់...' : 'Enter order...'}
+            rows={4}
+          />
+        </div>
+      )
+
     default:
       return (
         <div className="text-muted-foreground">
