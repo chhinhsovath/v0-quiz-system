@@ -294,7 +294,7 @@ export default function QuestionBanksPage() {
                       )}
                     </div>
 
-                    <Link href={`/admin/question-banks/${bank.id}/edit`}>
+                    <Link href={`/admin/question-banks/${bank.id}`}>
                       <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent">
                         {language === "km" ? "គ្រប់គ្រងសំណួរ" : "Manage Questions"}
                       </Button>
