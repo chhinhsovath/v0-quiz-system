@@ -88,15 +88,30 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const saveQuestion = () => {
     if (!editingQuestion) return
 
+    // Auto-generate correct answer for matching questions
+    let questionToSave = { ...editingQuestion }
+    if (editingQuestion.type === "matching" && editingQuestion.pairs) {
+      const correctAnswerMap: Record<string, string> = {}
+      editingQuestion.pairs.forEach(pair => {
+        correctAnswerMap[pair.left] = pair.right
+      })
+      questionToSave.correctAnswer = correctAnswerMap
+    }
+
+    // Auto-generate correct answer for ordering/drag-drop (array of correct order)
+    if ((editingQuestion.type === "ordering" || editingQuestion.type === "drag-drop") && editingQuestion.options) {
+      questionToSave.correctAnswer = [...editingQuestion.options]
+    }
+
     const existingIndex = questions.findIndex(q => q.id === editingQuestion.id)
     if (existingIndex >= 0) {
       // Update existing
       const updated = [...questions]
-      updated[existingIndex] = editingQuestion
+      updated[existingIndex] = questionToSave
       setQuestions(updated)
     } else {
       // Add new
-      setQuestions([...questions, editingQuestion])
+      setQuestions([...questions, questionToSave])
     }
 
     setIsQuestionDialogOpen(false)
@@ -187,31 +202,47 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
         }
       }
 
-      // Validate correct answers based on question type
+      // Validate matching pairs (correct answer is auto-generated from pairs)
+      if (q.type === "matching") {
+        if (!q.pairs || q.pairs.length === 0) {
+          toast.error(`Question ${questionNumber}: Please add matching pairs`)
+          return
+        }
+        if (q.pairs.some(pair => !pair.left.trim() || !pair.right.trim())) {
+          toast.error(`Question ${questionNumber}: Please fill in all matching pairs`)
+          return
+        }
+        // Skip correctAnswer check - it's auto-generated
+        continue
+      }
+
+      // Validate ordering/drag-drop (correct answer is auto-generated from options)
+      if (q.type === "ordering" || q.type === "drag-drop") {
+        if (!q.options || q.options.length === 0) {
+          toast.error(`Question ${questionNumber}: Please add items to order`)
+          return
+        }
+        if (q.options.some(opt => !opt.trim())) {
+          toast.error(`Question ${questionNumber}: Please fill in all items`)
+          return
+        }
+        // Skip correctAnswer check - it's auto-generated
+        continue
+      }
+
+      // Validate correct answers for other question types
       const needsCorrectAnswer = [
         "multiple-choice",
         "multiple-select",
         "true-false",
         "short-answer",
         "fill-blanks",
-        "drag-drop",
-        "matching",
-        "ordering",
         "image-choice"
       ]
 
       if (needsCorrectAnswer.includes(q.type)) {
-        if (!q.correctAnswer || (Array.isArray(q.correctAnswer) && q.correctAnswer.length === 0) ||
-            (typeof q.correctAnswer === "object" && Object.keys(q.correctAnswer).length === 0)) {
+        if (!q.correctAnswer || (Array.isArray(q.correctAnswer) && q.correctAnswer.length === 0)) {
           toast.error(`Question ${questionNumber}: Please set the correct answer`)
-          return
-        }
-      }
-
-      // Validate matching pairs
-      if (q.type === "matching" && q.pairs) {
-        if (q.pairs.some(pair => !pair.left.trim() || !pair.right.trim())) {
-          toast.error(`Question ${questionNumber}: Please fill in all matching pairs`)
           return
         }
       }
@@ -229,10 +260,25 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       }
     }
 
+    // Auto-generate correct answers for matching and ordering questions
+    const processedQuestions = questions.map(q => {
+      if (q.type === "matching" && q.pairs) {
+        const correctAnswerMap: Record<string, string> = {}
+        q.pairs.forEach(pair => {
+          correctAnswerMap[pair.left] = pair.right
+        })
+        return { ...q, correctAnswer: correctAnswerMap }
+      }
+      if ((q.type === "ordering" || q.type === "drag-drop") && q.options) {
+        return { ...q, correctAnswer: [...q.options] }
+      }
+      return q
+    })
+
     const quiz: Quiz = {
       id: initialQuiz?.id || crypto.randomUUID(),
       ...quizData,
-      questions,
+      questions: processedQuestions,
       createdBy: user?.id || "",
       createdAt: initialQuiz?.createdAt || new Date().toISOString(),
     }
