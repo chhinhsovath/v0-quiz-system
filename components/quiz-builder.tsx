@@ -59,6 +59,9 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false)
   const [showTypeSelector, setShowTypeSelector] = useState(false)
+  const [questionSortOrder, setQuestionSortOrder] = useState<"newest" | "oldest">("newest")
+  const [questionsPerPage, setQuestionsPerPage] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -724,63 +727,199 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
               </Card>
             )}
 
-            {/* Questions */}
+            {/* Questions - Compact List with Pagination */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <CardTitle>{t.questions}</CardTitle>
                     <CardDescription>{questions.length} {t.questionAdded}</CardDescription>
                   </div>
-                  <Button onClick={addQuestion}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t.addQuestion}
-                  </Button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {questions.length > 0 && (
+                      <>
+                        <Select value={questionSortOrder} onValueChange={(value: any) => {
+                          setQuestionSortOrder(value)
+                          setCurrentPage(1)
+                        }}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="newest">
+                              {language === "km" ? "ថ្មីបំផុត" : "Newest"}
+                            </SelectItem>
+                            <SelectItem value="oldest">
+                              {language === "km" ? "ចាស់បំផុត" : "Oldest"}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={questionsPerPage.toString()} onValueChange={(value) => {
+                          setQuestionsPerPage(Number(value))
+                          setCurrentPage(1)
+                        }}>
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10 / {language === "km" ? "ទំព័រ" : "page"}</SelectItem>
+                            <SelectItem value="20">20 / {language === "km" ? "ទំព័រ" : "page"}</SelectItem>
+                            <SelectItem value="50">50 / {language === "km" ? "ទំព័រ" : "page"}</SelectItem>
+                            <SelectItem value="999999">{language === "km" ? "ទាំងអស់" : "All"}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </>
+                    )}
+                    <Button onClick={addQuestion}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t.addQuestion}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent>
                 {questions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>{t.noQuestionsMessage}</p>
                   </div>
                 ) : (
-                  questions.map((question, index) => (
-                    <Card key={question.id} className="border-l-4 border-l-primary/50">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-semibold text-sm bg-primary/10 px-2 py-1 rounded">
-                                Q{index + 1}
-                              </span>
-                              <span className="text-xs text-muted-foreground capitalize">
-                                {question.type.replace("-", " ")}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                • {question.points} {question.points === 1 ? "point" : "points"}
-                              </span>
-                            </div>
-                            <p className="text-sm font-medium line-clamp-2">
-                              {question.question || <span className="text-muted-foreground italic">No question text</span>}
-                            </p>
-                          </div>
-                          <div className="flex gap-2 flex-shrink-0">
-                            <Button variant="outline" size="sm" onClick={() => editQuestion(question)}>
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteQuestion(question.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                  <>
+                    {/* Compact Table View */}
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-muted/50 border-b">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-semibold w-16">#</th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold">
+                                {language === "km" ? "សំណួរ" : "Question"}
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold w-32">
+                                {language === "km" ? "ប្រភេទ" : "Type"}
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold w-20">
+                                {language === "km" ? "ពិន្ទុ" : "Points"}
+                              </th>
+                              <th className="px-3 py-2 text-right text-xs font-semibold w-32">
+                                {language === "km" ? "សកម្មភាព" : "Actions"}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(() => {
+                              // Sort and paginate questions
+                              const sortedQuestions = questionSortOrder === "newest"
+                                ? [...questions].reverse()
+                                : questions
+                              const startIndex = (currentPage - 1) * questionsPerPage
+                              const endIndex = startIndex + questionsPerPage
+                              const paginatedQuestions = sortedQuestions.slice(startIndex, endIndex)
+
+                              return paginatedQuestions.map((question, displayIndex) => {
+                                const actualIndex = questionSortOrder === "newest"
+                                  ? questions.length - (startIndex + displayIndex)
+                                  : startIndex + displayIndex + 1
+
+                                return (
+                                  <tr key={question.id} className="border-b hover:bg-muted/30 transition-colors">
+                                    <td className="px-3 py-3">
+                                      <span className="font-semibold text-sm bg-primary/10 px-2 py-1 rounded">
+                                        Q{actualIndex}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-3">
+                                      <p className="text-sm font-medium line-clamp-2">
+                                        {question.question || <span className="text-muted-foreground italic">No question text</span>}
+                                      </p>
+                                    </td>
+                                    <td className="px-3 py-3">
+                                      <span className="text-xs text-muted-foreground capitalize">
+                                        {question.type.replace("-", " ")}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-3">
+                                      <span className="text-xs text-muted-foreground">
+                                        {question.points}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-3 text-right">
+                                      <div className="flex gap-1 justify-end">
+                                        <Button variant="outline" size="sm" onClick={() => editQuestion(question)}>
+                                          {language === "km" ? "កែ" : "Edit"}
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => deleteQuestion(question.id)}
+                                          className="text-destructive hover:text-destructive"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )
+                              })
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Pagination */}
+                    {questions.length > questionsPerPage && (
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          {language === "km" ? "បង្ហាញ" : "Showing"}{" "}
+                          {Math.min((currentPage - 1) * questionsPerPage + 1, questions.length)} -{" "}
+                          {Math.min(currentPage * questionsPerPage, questions.length)}{" "}
+                          {language === "km" ? "នៃ" : "of"} {questions.length}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                          >
+                            {language === "km" ? "មុន" : "Previous"}
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.ceil(questions.length / questionsPerPage) }, (_, i) => i + 1)
+                              .filter(page => {
+                                // Show first, last, current, and adjacent pages
+                                return page === 1 ||
+                                       page === Math.ceil(questions.length / questionsPerPage) ||
+                                       Math.abs(page - currentPage) <= 1
+                              })
+                              .map((page, index, arr) => (
+                                <span key={page}>
+                                  {index > 0 && arr[index - 1] !== page - 1 && (
+                                    <span className="px-2 text-muted-foreground">...</span>
+                                  )}
+                                  <Button
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    className="w-8 h-8 p-0"
+                                    onClick={() => setCurrentPage(page)}
+                                  >
+                                    {page}
+                                  </Button>
+                                </span>
+                              ))}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === Math.ceil(questions.length / questionsPerPage)}
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                          >
+                            {language === "km" ? "បន្ទាប់" : "Next"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
