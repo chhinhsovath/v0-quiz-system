@@ -420,6 +420,7 @@ function renderQuestionInput(
       )
 
     case 'fill-blank':
+    case 'fill-blanks':
       return (
         <Input
           value={answer || ''}
