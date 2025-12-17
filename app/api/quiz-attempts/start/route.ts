@@ -125,7 +125,13 @@ export async function POST(request: NextRequest) {
     if (attemptError) {
       console.error('Error creating attempt:', attemptError)
       return NextResponse.json(
-        { error: 'Failed to create quiz attempt', details: attemptError.message },
+        {
+          error: 'Failed to create quiz attempt',
+          details: attemptError.message,
+          hint: attemptError.hint,
+          code: attemptError.code,
+          fullError: JSON.stringify(attemptError)
+        },
         { status: 500 }
       )
     }
