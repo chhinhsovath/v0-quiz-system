@@ -574,10 +574,23 @@ export default function TakeQuizPage() {
                         {/* Right side - Available matches */}
                         <div className="space-y-3">
                           <h4 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                            Drag to Match ({availableMatches[question.id]?.length || 0} remaining)
+                            Drag to Match ({
+                              (availableMatches[question.id] ||
+                               question.pairs?.map(p => p.right).filter(right => {
+                                 const currentMatches = (answers[question.id] as Record<string, string>) || {}
+                                 return !Object.values(currentMatches).includes(right)
+                               }) || []
+                              ).length
+                            } remaining)
                           </h4>
                           <div className="space-y-2">
-                            {(availableMatches[question.id] || []).map((item, idx) => (
+                            {(availableMatches[question.id] && availableMatches[question.id].length > 0
+                              ? availableMatches[question.id]
+                              : question.pairs?.map(p => p.right).filter(right => {
+                                  const currentMatches = (answers[question.id] as Record<string, string>) || {}
+                                  return !Object.values(currentMatches).includes(right)
+                                }) || []
+                            ).map((item, idx) => (
                               <div
                                 key={idx}
                                 draggable
@@ -593,7 +606,12 @@ export default function TakeQuizPage() {
                                 <span className="text-sm sm:text-base font-medium">{item}</span>
                               </div>
                             ))}
-                            {availableMatches[question.id]?.length === 0 && (
+                            {((availableMatches[question.id] ||
+                               question.pairs?.map(p => p.right).filter(right => {
+                                 const currentMatches = (answers[question.id] as Record<string, string>) || {}
+                                 return !Object.values(currentMatches).includes(right)
+                               }) || []
+                            ).length === 0) && (
                               <div className="p-4 text-center text-muted-foreground text-sm rounded-lg border-2 border-dashed">
                                 All items have been matched!
                               </div>
