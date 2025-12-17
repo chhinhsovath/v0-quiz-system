@@ -31,6 +31,8 @@ export interface Question {
   difficulty?: "easy" | "medium" | "hard" // For adaptive testing
   tags?: string[] // For categorization
   mathFormula?: string // LaTeX formula
+  _originalOptions?: string[] // Original options before shuffle (internal use)
+  _shuffleSeed?: string // Seed used for shuffle (internal use)
 }
 
 export interface Quiz {
@@ -45,6 +47,7 @@ export interface Quiz {
   randomPoolSize?: number // How many questions to pull from banks
   timeLimit: number // in minutes, 0 for no limit
   randomizeQuestions: boolean
+  shuffleOptions: boolean // Shuffle answer options for each student
   allowMultipleAttempts: boolean
   maxAttempts?: number
   showCorrectAnswers: boolean
@@ -106,8 +109,11 @@ export interface QuestionBank {
   id: string
   name: string
   nameKm?: string
-  subject: string
-  gradeLevel: string
+  description?: string
+  descriptionKm?: string
+  subject?: string
+  gradeLevel?: string
+  categoryId?: string
   questions: Question[]
   createdBy: string
   sharedWith: string[] // User IDs who can access this bank

@@ -95,8 +95,11 @@ CREATE TABLE IF NOT EXISTS public.question_banks (
   name_km TEXT,
   description TEXT,
   description_km TEXT,
+  subject TEXT,
+  grade_level TEXT,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
   created_by UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  shared_with UUID[] DEFAULT '{}', -- Array of user IDs who can access this bank
   questions JSONB NOT NULL DEFAULT '[]', -- Store questions as JSON array
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

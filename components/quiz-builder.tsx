@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { ArrowLeft, Plus, Trash2, GripVertical, MoveVertical, ImageIcon, Save } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, GripVertical, MoveVertical, ImageIcon, Save, Database } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { ImageUpload } from "@/components/image-upload"
 import { useToast } from "@/components/ui/toast-notification"
@@ -31,6 +31,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const router = useRouter()
   const toast = useToast()
   const [categories, setCategories] = useState<Category[]>([])
+  const [questionBanks, setQuestionBanks] = useState<any[]>([])
   const [quizData, setQuizData] = useState({
     title: initialQuiz?.title || "",
     titleKm: initialQuiz?.titleKm || "",
@@ -46,8 +47,11 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     maxAttempts: initialQuiz?.maxAttempts || 3,
     timeLimit: initialQuiz?.timeLimit || 0,
     randomizeQuestions: initialQuiz?.randomizeQuestions || false,
+    shuffleOptions: initialQuiz?.shuffleOptions || false,
     allowMultipleAttempts: initialQuiz?.allowMultipleAttempts || true,
     showCorrectAnswers: initialQuiz?.showCorrectAnswers || true,
+    questionBankIds: initialQuiz?.questionBankIds || [],
+    randomPoolSize: initialQuiz?.randomPoolSize || 0,
   })
   const [questions, setQuestions] = useState<Question[]>(initialQuiz?.questions || [])
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
@@ -59,6 +63,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       return
     }
     loadCategories()
+    loadQuestionBanks()
   }, [isAdmin, router])
 
   const loadCategories = async () => {
@@ -73,6 +78,39 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     } catch (error) {
       console.error('Error loading categories:', error)
     }
+  }
+
+  const loadQuestionBanks = async () => {
+    try {
+      const banks = await quizStorage.getQuestionBanks()
+      // Filter to show only user's banks or shared banks
+      const filtered = banks.filter((b: any) => b.createdBy === user?.id || b.sharedWith?.includes(user?.id || ""))
+      setQuestionBanks(filtered)
+    } catch (error) {
+      console.error('Error loading question banks:', error)
+    }
+  }
+
+  const addQuestionsFromBank = (bankId: string) => {
+    const bank = questionBanks.find((b) => b.id === bankId)
+    if (!bank || !bank.questions || bank.questions.length === 0) {
+      toast.warning("This question bank is empty")
+      return
+    }
+
+    const poolSize = quizData.randomPoolSize || bank.questions.length
+    const questionsToAdd = quizData.randomPoolSize > 0 && quizData.randomPoolSize < bank.questions.length
+      ? bank.questions.sort(() => Math.random() - 0.5).slice(0, poolSize)
+      : bank.questions
+
+    // Add new questions with unique IDs
+    const newQuestions = questionsToAdd.map((q: any) => ({
+      ...q,
+      id: crypto.randomUUID() // Generate new ID to avoid conflicts
+    }))
+
+    setQuestions([...questions, ...newQuestions])
+    toast.success(`Added ${newQuestions.length} questions from question bank`)
   }
 
   const addQuestion = () => {
@@ -504,6 +542,19 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
+                      <Label>Shuffle Answer Options</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Randomize option order for each student to prevent cheating
+                      </p>
+                    </div>
+                    <Switch
+                      checked={quizData.shuffleOptions}
+                      onCheckedChange={(checked) => setQuizData({ ...quizData, shuffleOptions: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
                       <Label>{t.allowMultipleAttempts}</Label>
                       <p className="text-sm text-muted-foreground">{t.allowMultipleAttemptsDesc}</p>
                     </div>
@@ -526,6 +577,54 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Question Banks */}
+            {questionBanks.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Question Banks</CardTitle>
+                  <CardDescription>Import questions from your question banks</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Select Question Bank</Label>
+                      <Select onValueChange={addQuestionsFromBank}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a question bank..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {questionBanks.map((bank: any) => (
+                            <SelectItem key={bank.id} value={bank.id}>
+                              {bank.name} ({bank.questions?.length || 0} questions)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Random Pool Size (0 = all)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={quizData.randomPoolSize || ""}
+                        onChange={(e) => setQuizData({ ...quizData, randomPoolSize: Number.parseInt(e.target.value) || 0 })}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        If set, will randomly select this many questions from the bank
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                    <Database className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Questions imported from banks will be added to your quiz. You can edit them individually after import.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Questions */}
             <Card>

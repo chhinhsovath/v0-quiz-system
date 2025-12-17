@@ -129,6 +129,7 @@ export const quizStorage = {
       maxAttempts: quiz.max_attempts,
       timeLimit: quiz.time_limit,
       randomizeQuestions: quiz.randomize_questions,
+      shuffleOptions: quiz.shuffle_options || false,
       allowMultipleAttempts: quiz.allow_multiple_attempts,
       showCorrectAnswers: quiz.show_correct_answers,
       questions: quiz.questions,
@@ -157,6 +158,7 @@ export const quizStorage = {
       max_attempts: quiz.maxAttempts,
       time_limit: quiz.timeLimit,
       randomize_questions: quiz.randomizeQuestions,
+      shuffle_options: quiz.shuffleOptions || false,
       allow_multiple_attempts: quiz.allowMultipleAttempts,
       show_correct_answers: quiz.showCorrectAnswers,
       questions: quiz.questions
@@ -195,6 +197,7 @@ export const quizStorage = {
       maxAttempts: data.max_attempts,
       timeLimit: data.time_limit,
       randomizeQuestions: data.randomize_questions,
+      shuffleOptions: data.shuffle_options || false,
       allowMultipleAttempts: data.allow_multiple_attempts,
       showCorrectAnswers: data.show_correct_answers,
       questions: data.questions,
@@ -218,6 +221,7 @@ export const quizStorage = {
     if (updates.maxAttempts !== undefined) updateData.max_attempts = updates.maxAttempts
     if (updates.timeLimit !== undefined) updateData.time_limit = updates.timeLimit
     if (updates.randomizeQuestions !== undefined) updateData.randomize_questions = updates.randomizeQuestions
+    if (updates.shuffleOptions !== undefined) updateData.shuffle_options = updates.shuffleOptions
     if (updates.allowMultipleAttempts !== undefined) updateData.allow_multiple_attempts = updates.allowMultipleAttempts
     if (updates.showCorrectAnswers !== undefined) updateData.show_correct_answers = updates.showCorrectAnswers
     if (updates.questions !== undefined) updateData.questions = updates.questions
@@ -851,9 +855,13 @@ export const quizStorage = {
       nameKm: bank.name_km,
       description: bank.description,
       descriptionKm: bank.description_km,
+      subject: bank.subject,
+      gradeLevel: bank.grade_level,
       categoryId: bank.category_id,
       createdBy: bank.created_by,
-      questions: bank.questions
+      sharedWith: bank.shared_with || [],
+      questions: bank.questions || [],
+      createdAt: bank.created_at
     }))
   },
 
@@ -870,9 +878,12 @@ export const quizStorage = {
         name_km: bank.nameKm,
         description: bank.description,
         description_km: bank.descriptionKm,
+        subject: bank.subject,
+        grade_level: bank.gradeLevel,
         category_id: bank.categoryId,
         created_by: bank.createdBy,
-        questions: bank.questions
+        shared_with: bank.sharedWith || [],
+        questions: bank.questions || []
       })
 
     if (error) {
@@ -887,7 +898,10 @@ export const quizStorage = {
     if (updates.nameKm !== undefined) updateData.name_km = updates.nameKm
     if (updates.description !== undefined) updateData.description = updates.description
     if (updates.descriptionKm !== undefined) updateData.description_km = updates.descriptionKm
+    if (updates.subject !== undefined) updateData.subject = updates.subject
+    if (updates.gradeLevel !== undefined) updateData.grade_level = updates.gradeLevel
     if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId
+    if (updates.sharedWith !== undefined) updateData.shared_with = updates.sharedWith
     if (updates.questions !== undefined) updateData.questions = updates.questions
 
     const { error } = await supabase

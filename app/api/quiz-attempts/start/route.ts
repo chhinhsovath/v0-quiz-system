@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { prepareQuestionsForStudent } from '@/lib/shuffle-utils'
 
 /**
  * POST /api/quiz-attempts/start
- * Start a new quiz attempt with randomized question order
+ * Start a new quiz attempt with randomized question order and shuffled options
  */
 export async function POST(request: NextRequest) {
   try {
@@ -73,19 +74,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Randomize question order if enabled
+    // Prepare questions with randomization and shuffle if enabled
     const questions = quiz.questions || []
-    let questionOrder: string[]
+    const attemptId = crypto.randomUUID() // Generate attempt ID early for shuffle seeding
 
-    if (quiz.randomize_questions) {
-      // Create randomized order
-      questionOrder = questions
-        .map((q: any) => q.id)
-        .sort(() => Math.random() - 0.5)
-    } else {
-      // Keep original order
-      questionOrder = questions.map((q: any) => q.id)
-    }
+    // Prepare questions for this specific student
+    const preparedQuestions = prepareQuestionsForStudent(
+      questions,
+      quiz.randomize_questions || false,
+      quiz.shuffle_options || false,
+      user_id,
+      attemptId
+    )
+
+    // Track question order (after randomization)
+    const questionOrder = preparedQuestions.map((q: any) => q.id)
 
     // Calculate max score
     const maxScore = questions.reduce((sum: number, q: any) => sum + (q.points || 0), 0)
@@ -94,10 +97,11 @@ export async function POST(request: NextRequest) {
     const ip_address = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const user_agent = request.headers.get('user-agent') || 'unknown'
 
-    // Create new attempt record
+    // Create new attempt record with pre-generated ID
     const { data: attempt, error: attemptError } = await supabase
       .from('quiz_attempts')
       .insert({
+        id: attemptId,
         quiz_id,
         user_id,
         question_order: questionOrder,
@@ -120,11 +124,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Return attempt with questions in randomized order
-    const orderedQuestions = questionOrder
-      .map(qId => questions.find((q: any) => q.id === qId))
-      .filter(Boolean)
-
+    // Return attempt with questions prepared for this student (randomized + shuffled)
     return NextResponse.json({
       success: true,
       attempt: {
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         started_at: attempt.started_at,
         status: attempt.status
       },
-      questions: orderedQuestions,
+      questions: preparedQuestions, // Already randomized and shuffled
       quiz_info: {
         title: quiz.title,
         title_km: quiz.title_km,
