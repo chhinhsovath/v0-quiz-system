@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { ArrowLeft, Plus, Trash2, GripVertical, MoveVertical, ImageIcon, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { ImageUpload } from "@/components/image-upload"
@@ -47,6 +48,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     showCorrectAnswers: initialQuiz?.showCorrectAnswers || true,
   })
   const [questions, setQuestions] = useState<Question[]>(initialQuiz?.questions || [])
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
+  const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -71,11 +74,41 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       correctAnswer: "",
       points: 1,
     }
-    setQuestions([...questions, newQuestion])
+    setEditingQuestion(newQuestion)
+    setIsQuestionDialogOpen(true)
   }
 
-  const updateQuestion = (id: string, updates: Partial<Question>) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)))
+  const editQuestion = (question: Question) => {
+    setEditingQuestion({ ...question })
+    setIsQuestionDialogOpen(true)
+  }
+
+  const saveQuestion = () => {
+    if (!editingQuestion) return
+
+    const existingIndex = questions.findIndex(q => q.id === editingQuestion.id)
+    if (existingIndex >= 0) {
+      // Update existing
+      const updated = [...questions]
+      updated[existingIndex] = editingQuestion
+      setQuestions(updated)
+    } else {
+      // Add new
+      setQuestions([...questions, editingQuestion])
+    }
+
+    setIsQuestionDialogOpen(false)
+    setEditingQuestion(null)
+  }
+
+  const cancelQuestionEdit = () => {
+    setIsQuestionDialogOpen(false)
+    setEditingQuestion(null)
+  }
+
+  const updateEditingQuestion = (updates: Partial<Question>) => {
+    if (!editingQuestion) return
+    setEditingQuestion({ ...editingQuestion, ...updates })
   }
 
   const deleteQuestion = (id: string) => {
@@ -402,24 +435,48 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {questions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>{t.noQuestionsMessage}</p>
                   </div>
                 ) : (
                   questions.map((question, index) => (
-                    <QuestionEditor
-                      key={question.id}
-                      question={question}
-                      index={index}
-                      onUpdate={updateQuestion}
-                      onDelete={deleteQuestion}
-                      onUpdateOption={updateQuestionOption}
-                      onAddOption={addOption}
-                      onRemoveOption={removeOption}
-                      t={t}
-                    />
+                    <Card key={question.id} className="border-l-4 border-l-primary/50">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-semibold text-sm bg-primary/10 px-2 py-1 rounded">
+                                Q{index + 1}
+                              </span>
+                              <span className="text-xs text-muted-foreground capitalize">
+                                {question.type.replace("-", " ")}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                • {question.points} {question.points === 1 ? "point" : "points"}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium line-clamp-2">
+                              {question.question || <span className="text-muted-foreground italic">No question text</span>}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <Button variant="outline" size="sm" onClick={() => editQuestion(question)}>
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteQuestion(question.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))
                 )}
               </CardContent>
@@ -435,6 +492,44 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                 {initialQuiz ? t.updateQuiz : t.create + " " + t.quiz}
               </Button>
             </div>
+
+            {/* Question Editor Dialog */}
+            <Dialog open={isQuestionDialogOpen} onOpenChange={(open) => {
+              if (!open) cancelQuestionEdit()
+            }}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingQuestion && questions.find(q => q.id === editingQuestion.id)
+                      ? `Edit Question ${questions.findIndex(q => q.id === editingQuestion.id) + 1}`
+                      : "Add New Question"}
+                  </DialogTitle>
+                </DialogHeader>
+
+                {editingQuestion && (
+                  <QuestionEditor
+                    question={editingQuestion}
+                    index={questions.length}
+                    onUpdate={(_, updates) => updateEditingQuestion(updates)}
+                    onDelete={() => {}}
+                    onUpdateOption={(_, index, value) => updateQuestionOption(index, value)}
+                    onAddOption={() => addOption()}
+                    onRemoveOption={(_, index) => removeOption(index)}
+                    t={t}
+                  />
+                )}
+
+                <DialogFooter className="gap-2">
+                  <Button variant="outline" onClick={cancelQuestionEdit}>
+                    Cancel
+                  </Button>
+                  <Button onClick={saveQuestion} disabled={!editingQuestion?.question?.trim()}>
+                    <Save className="h-4 w-4 mr-2" />
+                    {editingQuestion && questions.find(q => q.id === editingQuestion.id) ? "Update Question" : "Add Question"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </main>
