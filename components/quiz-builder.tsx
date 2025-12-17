@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ArrowLeft, Plus, Trash2, GripVertical, MoveVertical, ImageIcon, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { ImageUpload } from "@/components/image-upload"
+import { useToast } from "@/components/ui/toast-notification"
 
 interface QuizBuilderProps {
   initialQuiz?: Quiz
@@ -28,6 +29,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const { isAdmin, user } = useAuth()
   const { t } = useI18n()
   const router = useRouter()
+  const toast = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [quizData, setQuizData] = useState({
     title: initialQuiz?.title || "",
@@ -153,36 +155,76 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
   const handleSave = () => {
     if (!quizData.title.trim()) {
-      alert("Please enter a quiz title")
+      toast.error("Please enter a quiz title")
       return
     }
 
     if (!quizData.categoryId) {
-      alert("Please select a category")
+      toast.error("Please select a category")
       return
     }
 
     if (questions.length === 0) {
-      alert("Please add at least one question")
+      toast.warning("Please add at least one question")
       return
     }
 
     // Validate questions
-    for (const q of questions) {
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i]
+      const questionNumber = i + 1
+
       if (!q.question.trim()) {
-        alert("Please fill in all question texts")
+        toast.error(`Question ${questionNumber}: Please fill in the question text`)
         return
       }
 
-      if ((q.type === "multiple-choice" || q.type === "multiple-select") && q.options) {
+      // Validate options for question types that use them
+      if ((q.type === "multiple-choice" || q.type === "multiple-select" || q.type === "true-false") && q.options) {
         if (q.options.some((opt) => !opt.trim())) {
-          alert("Please fill in all answer options")
+          toast.error(`Question ${questionNumber}: Please fill in all answer options`)
           return
         }
       }
 
-      if (!q.correctAnswer || (Array.isArray(q.correctAnswer) && q.correctAnswer.length === 0)) {
-        alert("Please set correct answers for all questions")
+      // Validate correct answers based on question type
+      const needsCorrectAnswer = [
+        "multiple-choice",
+        "multiple-select",
+        "true-false",
+        "short-answer",
+        "fill-blanks",
+        "drag-drop",
+        "matching",
+        "ordering",
+        "image-choice"
+      ]
+
+      if (needsCorrectAnswer.includes(q.type)) {
+        if (!q.correctAnswer || (Array.isArray(q.correctAnswer) && q.correctAnswer.length === 0) ||
+            (typeof q.correctAnswer === "object" && Object.keys(q.correctAnswer).length === 0)) {
+          toast.error(`Question ${questionNumber}: Please set the correct answer`)
+          return
+        }
+      }
+
+      // Validate matching pairs
+      if (q.type === "matching" && q.pairs) {
+        if (q.pairs.some(pair => !pair.left.trim() || !pair.right.trim())) {
+          toast.error(`Question ${questionNumber}: Please fill in all matching pairs`)
+          return
+        }
+      }
+
+      // Validate hotspot areas
+      if (q.type === "hotspot" && (!q.hotspots || q.hotspots.length === 0)) {
+        toast.error(`Question ${questionNumber}: Please add at least one hotspot area`)
+        return
+      }
+
+      // Validate image for image-based questions
+      if ((q.type === "image-choice" || q.type === "hotspot") && !q.imageUrl) {
+        toast.error(`Question ${questionNumber}: Please upload an image`)
         return
       }
     }
@@ -197,11 +239,16 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
     if (initialQuiz) {
       quizStorage.updateQuiz(quiz.id, quiz)
+      toast.success("Quiz updated successfully!")
     } else {
       quizStorage.addQuiz(quiz)
+      toast.success("Quiz created successfully!")
     }
 
-    router.push("/admin/quizzes")
+    // Delay navigation to show toast
+    setTimeout(() => {
+      router.push("/admin/quizzes")
+    }, 500)
   }
 
   if (!isAdmin) return null

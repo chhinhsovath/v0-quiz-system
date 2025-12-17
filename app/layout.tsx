@@ -4,6 +4,8 @@ import { Hanuman } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/lib/auth-context"
 import { I18nProvider } from "@/lib/i18n-context"
+import { AutoSeed } from "@/components/auto-seed"
+import { ToastProvider } from "@/components/ui/toast-notification"
 import "./globals.css"
 
 const hanuman = Hanuman({
@@ -44,9 +46,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${hanuman.variable} font-sans antialiased`}>
-        <I18nProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </I18nProvider>
+        <ToastProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <AutoSeed />
+              {children}
+            </AuthProvider>
+          </I18nProvider>
+        </ToastProvider>
         <Analytics />
       </body>
     </html>
