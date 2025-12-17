@@ -475,7 +475,12 @@ export const quizStorage = {
       })
 
     if (error) {
-      console.error('Error adding attempt:', error)
+      console.error('Error adding attempt:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       throw error
     }
   },

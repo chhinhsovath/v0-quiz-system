@@ -206,8 +206,16 @@ export default function TakeQuizPage() {
 
     try {
       await quizStorage.addAttempt(attempt)
-    } catch (error) {
-      console.error('Error saving attempt:', error)
+    } catch (error: any) {
+      console.error('Error saving attempt:', {
+        message: error?.message || 'Unknown error',
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        fullError: error
+      })
+      // Show user-friendly error message
+      alert('Failed to save quiz attempt. Please try again.')
     }
   }
 
