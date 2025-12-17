@@ -43,9 +43,6 @@ export default function EditQuizPage() {
 
   return (
     <div>
-      <div className="container mx-auto px-4 py-4">
-        <BackButton href="/admin/quizzes" />
-      </div>
       <QuizBuilder initialQuiz={quiz} />
     </div>
   )

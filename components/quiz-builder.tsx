@@ -429,6 +429,10 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
+            <Button variant="ghost" onClick={() => router.push("/admin/quizzes")} className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t.backToQuizzes}
+            </Button>
             <h1 className="text-3xl font-bold mb-2">{initialQuiz ? t.editQuiz : t.createNewQuiz}</h1>
             <p className="text-muted-foreground">
               {initialQuiz ? t.updateQuizDetailsDesc : t.buildNewQuizDesc}
