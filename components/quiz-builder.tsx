@@ -29,7 +29,7 @@ interface QuizBuilderProps {
 
 export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const { isAdmin, user } = useAuth()
-  const { t } = useI18n()
+  const { t, language } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [categories, setCategories] = useState<Category[]>([])
