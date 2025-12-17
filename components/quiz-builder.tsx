@@ -62,6 +62,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const [questionSortOrder, setQuestionSortOrder] = useState<"newest" | "oldest">("newest")
   const [questionsPerPage, setQuestionsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewQuestionIndex, setPreviewQuestionIndex] = useState(0)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -925,14 +927,30 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
             </Card>
 
             {/* Save Button */}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => router.push("/admin/quizzes")}>
-                {t.cancel}
+            <div className="flex justify-between items-center">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (questions.length === 0) {
+                    toast.error(language === "km" ? "សូមបន្ថែមសំណួរមុន" : "Please add questions first")
+                    return
+                  }
+                  setPreviewQuestionIndex(0)
+                  setIsPreviewOpen(true)
+                }}
+                disabled={questions.length === 0}
+              >
+                {language === "km" ? "មើលជាមុន" : "Preview Quiz"}
               </Button>
-              <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                {initialQuiz ? t.updateQuiz : t.create + " " + t.quiz}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => router.push("/admin/quizzes")}>
+                  {t.cancel}
+                </Button>
+                <Button onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {initialQuiz ? t.updateQuiz : t.create + " " + t.quiz}
+                </Button>
+              </div>
             </div>
 
             {/* Question Editor Dialog */}
@@ -995,6 +1013,242 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                       {editingQuestion && questions.find(q => q.id === editingQuestion.id) ? "Update Question" : "Add Question"}
                     </Button>
                   </DialogFooter>
+                )}
+              </DialogContent>
+            </Dialog>
+
+            {/* Quiz Preview Dialog */}
+            <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {language === "km" ? "មើលជាមុនតេស្ត" : "Quiz Preview"}
+                  </DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {language === "km"
+                      ? "នេះជារូបរាងដែលសិស្សនឹងឃើញ"
+                      : "This is how students will see the quiz"}
+                  </p>
+                </DialogHeader>
+
+                {questions.length > 0 && (
+                  <div className="space-y-6">
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">
+                          {language === "km" ? "សំណួរ" : "Question"} {previewQuestionIndex + 1} {language === "km" ? "នៃ" : "of"} {questions.length}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {Math.round(((previewQuestionIndex + 1) / questions.length) * 100)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="bg-primary h-2 rounded-full transition-all"
+                          style={{ width: `${((previewQuestionIndex + 1) / questions.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Current Question */}
+                    {(() => {
+                      const q = questions[previewQuestionIndex]
+                      return (
+                        <Card>
+                          <CardHeader>
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs px-2 py-1 bg-primary/10 rounded font-medium">
+                                    Q{previewQuestionIndex + 1}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground capitalize">
+                                    {q.type.replace("-", " ")}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    • {q.points} {language === "km" ? "ពិន្ទុ" : "points"}
+                                  </span>
+                                </div>
+                                <h3 className="text-lg font-medium">{q.question}</h3>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            {/* Multiple Choice */}
+                            {q.type === "multiple-choice" && q.options && (
+                              <RadioGroup>
+                                {q.options.map((option, idx) => (
+                                  <div key={idx} className="flex items-center space-x-2 p-3 border rounded hover:bg-muted/50">
+                                    <RadioGroupItem value={option} id={`preview-${idx}`} disabled />
+                                    <Label htmlFor={`preview-${idx}`} className="flex-1 cursor-pointer">
+                                      {option}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            )}
+
+                            {/* Multiple Select */}
+                            {q.type === "multiple-select" && q.options && (
+                              <div className="space-y-2">
+                                {q.options.map((option, idx) => (
+                                  <div key={idx} className="flex items-center space-x-2 p-3 border rounded hover:bg-muted/50">
+                                    <Checkbox id={`preview-multi-${idx}`} disabled />
+                                    <Label htmlFor={`preview-multi-${idx}`} className="flex-1 cursor-pointer">
+                                      {option}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* True/False */}
+                            {q.type === "true-false" && (
+                              <RadioGroup>
+                                <div className="flex items-center space-x-2 p-3 border rounded hover:bg-muted/50">
+                                  <RadioGroupItem value="true" id="preview-true" disabled />
+                                  <Label htmlFor="preview-true" className="flex-1 cursor-pointer">
+                                    {language === "km" ? "ត្រូវ" : "True"}
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2 p-3 border rounded hover:bg-muted/50">
+                                  <RadioGroupItem value="false" id="preview-false" disabled />
+                                  <Label htmlFor="preview-false" className="flex-1 cursor-pointer">
+                                    {language === "km" ? "ខុស" : "False"}
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            )}
+
+                            {/* Short Answer */}
+                            {q.type === "short-answer" && (
+                              <Input
+                                placeholder={language === "km" ? "វាយចម្លើយរបស់អ្នកនៅទីនេះ..." : "Type your answer here..."}
+                                disabled
+                                className="w-full"
+                              />
+                            )}
+
+                            {/* Essay */}
+                            {q.type === "essay" && (
+                              <Textarea
+                                placeholder={language === "km" ? "សរសេរអត្ថបទរបស់អ្នកនៅទីនេះ..." : "Write your essay here..."}
+                                disabled
+                                rows={6}
+                                className="w-full"
+                              />
+                            )}
+
+                            {/* Fill Blanks */}
+                            {q.type === "fill-blanks" && (
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">
+                                  {language === "km" ? "បំពេញនៅក្នុងចន្លោះទទេ:" : "Fill in the blanks:"}
+                                </p>
+                                <div className="p-4 border rounded bg-muted/20">
+                                  {q.blanksTemplate || language === "km" ? "គំរូនឹងត្រូវបានបង្ហាញនៅទីនេះ" : "Template will be shown here"}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Matching */}
+                            {q.type === "matching" && q.pairs && (
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {language === "km" ? "ផ្គូផ្គងធាតុពីសងខាង:" : "Match items from both columns:"}
+                                </p>
+                                <div className="grid gap-2">
+                                  {q.pairs.map((pair, idx) => (
+                                    <div key={idx} className="flex items-center gap-4">
+                                      <div className="flex-1 p-3 border rounded bg-muted/20">
+                                        {pair.left}
+                                      </div>
+                                      <span className="text-muted-foreground">↔</span>
+                                      <div className="flex-1 p-3 border rounded bg-muted/20">
+                                        {pair.right}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Ordering */}
+                            {q.type === "ordering" && q.options && (
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {language === "km" ? "តម្រៀបធាតុទាំងនេះតាមលំដាប់ត្រឹមត្រូវ:" : "Arrange these items in correct order:"}
+                                </p>
+                                {q.options.map((item, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 p-3 border rounded bg-muted/20">
+                                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                    <span>{item}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Image Choice */}
+                            {q.type === "image-choice" && q.imageUrl && (
+                              <div className="space-y-4">
+                                <img src={q.imageUrl} alt="Question" className="w-full rounded-lg border" />
+                                {q.options && (
+                                  <RadioGroup>
+                                    {q.options.map((option, idx) => (
+                                      <div key={idx} className="flex items-center space-x-2 p-3 border rounded hover:bg-muted/50">
+                                        <RadioGroupItem value={option} id={`preview-img-${idx}`} disabled />
+                                        <Label htmlFor={`preview-img-${idx}`} className="flex-1 cursor-pointer">
+                                          {option}
+                                        </Label>
+                                      </div>
+                                    ))}
+                                  </RadioGroup>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Hotspot */}
+                            {q.type === "hotspot" && q.imageUrl && (
+                              <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">
+                                  {language === "km" ? "ចុចលើតំបន់ត្រឹមត្រូវនៅលើរូបភាព:" : "Click on the correct areas in the image:"}
+                                </p>
+                                <img src={q.imageUrl} alt="Hotspot Question" className="w-full rounded-lg border" />
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )
+                    })()}
+
+                    {/* Navigation */}
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        onClick={() => setPreviewQuestionIndex(Math.max(0, previewQuestionIndex - 1))}
+                        disabled={previewQuestionIndex === 0}
+                      >
+                        {language === "km" ? "មុន" : "Previous"}
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        {previewQuestionIndex + 1} / {questions.length}
+                      </span>
+                      <Button
+                        variant="outline"
+                        onClick={() => setPreviewQuestionIndex(Math.min(questions.length - 1, previewQuestionIndex + 1))}
+                        disabled={previewQuestionIndex === questions.length - 1}
+                      >
+                        {language === "km" ? "បន្ទាប់" : "Next"}
+                      </Button>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button onClick={() => setIsPreviewOpen(false)}>
+                        {language === "km" ? "បិទមើលជាមុន" : "Close Preview"}
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </DialogContent>
             </Dialog>
