@@ -23,7 +23,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Load user from localStorage on mount
     const storedUser = localStorage.getItem("quiz_user")
     if (storedUser) {
-      setUser(JSON.parse(storedUser))
+      const parsed = JSON.parse(storedUser)
+
+      // Migrate old simple IDs to UUIDs
+      const idMigrationMap: Record<string, string> = {
+        "1": "00000000-0000-0000-0000-000000000001", // Admin
+        "2": "00000000-0000-0000-0000-000000000002", // Teacher
+        "3": "00000000-0000-0000-0000-000000000003", // Student
+        "4": "00000000-0000-0000-0000-000000000004", // Parent
+      }
+
+      // If stored ID is old format, migrate it
+      if (parsed.id && idMigrationMap[parsed.id]) {
+        const oldId = parsed.id
+        parsed.id = idMigrationMap[parsed.id]
+        localStorage.setItem("quiz_user", JSON.stringify(parsed))
+        console.log(`✅ Migrated user ID from "${oldId}" to UUID format`)
+      }
+
+      setUser(parsed)
     }
   }, [])
 
