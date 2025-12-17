@@ -14,7 +14,7 @@ import { Globe, GraduationCap } from "lucide-react"
 import Link from "next/link"
 
 export function LoginForm() {
-  const [phoneNumber, setPhoneNumber] = useState("")
+  const [emailOrPhone, setEmailOrPhone] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const { login } = useAuth()
@@ -32,14 +32,15 @@ export function LoginForm() {
       "0999999999": "parent@quiz.com",
     }
 
-    const email = emailMap[phoneNumber] || phoneNumber
+    // Accept both email and phone number
+    const email = emailMap[emailOrPhone] || emailOrPhone
     const success = await login(email, password)
 
     if (!success) {
       setError(
         language === "km"
-          ? "លេខទូរសព្ទ ឬលេខកូដសម្ងាត់មិនត្រឹមត្រូវ"
-          : "Invalid phone number or PIN. Try demo accounts below."
+          ? "អ៊ីមែល/លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ"
+          : "Invalid email/phone or password. Try demo accounts below."
       )
     }
   }
@@ -92,13 +93,15 @@ export function LoginForm() {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">{language === "km" ? "លេខទូរសព្ទ" : "Phone Number"}</Label>
+              <Label htmlFor="emailOrPhone">
+                {language === "km" ? "អ៊ីមែល ឬលេខទូរសព្ទ" : "Email or Phone Number"}
+              </Label>
               <Input
-                id="phone"
-                type="tel"
-                placeholder={language === "km" ? "បញ្ចូលលេខទូរសព្ទ" : "Enter phone number"}
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                id="emailOrPhone"
+                type="text"
+                placeholder={language === "km" ? "បញ្ចូលអ៊ីមែល ឬលេខទូរសព្ទ" : "Enter email or phone"}
+                value={emailOrPhone}
+                onChange={(e) => setEmailOrPhone(e.target.value)}
                 required
                 className="h-12"
               />
@@ -106,15 +109,14 @@ export function LoginForm() {
 
             <div className="space-y-2">
               <Label htmlFor="password">
-                {language === "km" ? "លេខកូដសម្ងាត់ (៤ ខ្ទង់ចុងក្រោយ)" : "PIN (Last 4 digits)"}
+                {language === "km" ? "ពាក្យសម្ងាត់" : "Password"}
               </Label>
               <Input
                 id="password"
                 type="password"
-                placeholder={language === "km" ? "បញ្ចូលលេខកូដសម្ងាត់" : "Enter PIN"}
+                placeholder={language === "km" ? "បញ្ចូលពាក្យសម្ងាត់" : "Enter password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                maxLength={4}
                 required
                 className="h-12"
               />
@@ -140,23 +142,78 @@ export function LoginForm() {
               </Link>
             </div>
 
-            {/* Demo Accounts */}
-            <div className="text-xs text-muted-foreground space-y-1 pt-4 border-t">
-              <p className="font-medium">{language === "km" ? "គណនីសាកល្បង:" : "Demo accounts:"}</p>
-              <p>
-                {language === "km" ? "អ្នកគ្រប់គ្រង" : "Admin"}: 0123456789
+            {/* Demo Accounts Table */}
+            <div className="pt-4 border-t">
+              <p className="text-xs font-semibold text-muted-foreground mb-3">
+                {language === "km" ? "គណនីសាកល្បង:" : "Demo Accounts:"}
               </p>
-              <p>
-                {language === "km" ? "គ្រូបង្រៀន" : "Teacher"}: 0987654321
-              </p>
-              <p>
-                {language === "km" ? "សិស្ស" : "Student"}: 0111111111
-              </p>
-              <p>
-                {language === "km" ? "មាតាបិតា" : "Parent"}: 0999999999
-              </p>
-              <p className="text-xs mt-2 italic">
-                {language === "km" ? "(លេខកូដសម្ងាត់អ្វីក៏បាន)" : "(Any PIN works)"}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border border-muted">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="px-2 py-1.5 text-left font-semibold border-b border-r border-muted">
+                        {language === "km" ? "តួនាទី" : "Role"}
+                      </th>
+                      <th className="px-2 py-1.5 text-left font-semibold border-b border-r border-muted">
+                        {language === "km" ? "អ៊ីមែល" : "Email"}
+                      </th>
+                      <th className="px-2 py-1.5 text-left font-semibold border-b border-muted">
+                        {language === "km" ? "ពាក្យសម្ងាត់" : "Password"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="px-2 py-1.5 border-b border-r border-muted font-medium">
+                        {language === "km" ? "អ្នកគ្រប់គ្រង" : "Admin"}
+                      </td>
+                      <td className="px-2 py-1.5 border-b border-r border-muted font-mono text-[10px]">
+                        admin@quiz.com
+                      </td>
+                      <td className="px-2 py-1.5 border-b border-muted text-muted-foreground italic">
+                        {language === "km" ? "អ្វីក៏បាន" : "any password"}
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="px-2 py-1.5 border-b border-r border-muted font-medium">
+                        {language === "km" ? "គ្រូបង្រៀន" : "Teacher"}
+                      </td>
+                      <td className="px-2 py-1.5 border-b border-r border-muted font-mono text-[10px]">
+                        teacher@quiz.com
+                      </td>
+                      <td className="px-2 py-1.5 border-b border-muted text-muted-foreground italic">
+                        {language === "km" ? "អ្វីក៏បាន" : "any password"}
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="px-2 py-1.5 border-b border-r border-muted font-medium">
+                        {language === "km" ? "សិស្ស" : "Student"}
+                      </td>
+                      <td className="px-2 py-1.5 border-b border-r border-muted font-mono text-[10px]">
+                        student@quiz.com
+                      </td>
+                      <td className="px-2 py-1.5 border-b border-muted text-muted-foreground italic">
+                        {language === "km" ? "អ្វីក៏បាន" : "any password"}
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-muted/30 transition-colors">
+                      <td className="px-2 py-1.5 border-r border-muted font-medium">
+                        {language === "km" ? "មាតាបិតា" : "Parent"}
+                      </td>
+                      <td className="px-2 py-1.5 border-r border-muted font-mono text-[10px]">
+                        parent@quiz.com
+                      </td>
+                      <td className="px-2 py-1.5 text-muted-foreground italic">
+                        {language === "km" ? "អ្វីក៏បាន" : "any password"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2 text-center italic">
+                {language === "km"
+                  ? "💡 ប្រើអ៊ីមែលដើម្បីចូល ពាក្យសម្ងាត់អ្វីក៏ដំណើរការ"
+                  : "💡 Use email to login, any password works"}
               </p>
             </div>
           </form>
