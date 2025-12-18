@@ -9,8 +9,9 @@ import type { QuizAttempt, Quiz, Category } from "@/lib/quiz-types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trophy, Users, BarChart3, TrendingUp } from "lucide-react"
+import { Trophy, Users, BarChart3, TrendingUp, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export default function AdminResultsPage() {
   const { isAdmin } = useAuth()
@@ -191,12 +192,17 @@ export default function AdminResultsPage() {
                 const percentage = (attempt.score / attempt.maxScore) * 100
 
                 return (
-                  <Card key={attempt.id}>
+                  <Card
+                    key={attempt.id}
+                    className="hover:shadow-md transition-shadow cursor-pointer group"
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <CardTitle className="text-lg">{quiz.title}</CardTitle>
+                            <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                              {quiz.title}
+                            </CardTitle>
                             {category && (
                               <Badge
                                 variant="secondary"
@@ -218,16 +224,24 @@ export default function AdminResultsPage() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Trophy className="h-4 w-4" />
-                          <span>
-                            {attempt.score} / {attempt.maxScore} points
-                          </span>
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Trophy className="h-4 w-4" />
+                            <span>
+                              {attempt.score} / {attempt.maxScore} points
+                            </span>
+                          </div>
+                          <div>
+                            <span>Completed: {formatDate(attempt.completedAt)}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span>Completed: {formatDate(attempt.completedAt)}</span>
-                        </div>
+                        <Link href={`/quizzes/result/${attempt.id}`}>
+                          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary border border-primary rounded-md hover:bg-primary hover:text-primary-foreground transition-colors">
+                            <Eye className="h-4 w-4" />
+                            View Details
+                          </button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>

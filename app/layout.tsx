@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { I18nProvider } from "@/lib/i18n-context"
 import { AutoSeed } from "@/components/auto-seed"
 import { ToastProvider } from "@/components/ui/toast-notification"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 const hanuman = Hanuman({
@@ -54,6 +55,7 @@ export default function RootLayout({
             </AuthProvider>
           </I18nProvider>
         </ToastProvider>
+        <Toaster position="top-right" richColors />
         <Analytics />
       </body>
     </html>
