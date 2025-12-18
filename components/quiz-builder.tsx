@@ -239,6 +239,25 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     setEditingQuestion(null)
   }
 
+  // Functions for editing the current question being edited in dialog
+  const updateEditingQuestionOption = (optionIndex: number, value: string) => {
+    if (!editingQuestion || !editingQuestion.options) return
+    const newOptions = [...editingQuestion.options]
+    newOptions[optionIndex] = value
+    setEditingQuestion({ ...editingQuestion, options: newOptions })
+  }
+
+  const addEditingQuestionOption = () => {
+    if (!editingQuestion || !editingQuestion.options) return
+    setEditingQuestion({ ...editingQuestion, options: [...editingQuestion.options, ""] })
+  }
+
+  const removeEditingQuestionOption = (optionIndex: number) => {
+    if (!editingQuestion || !editingQuestion.options || editingQuestion.options.length <= 2) return
+    const newOptions = editingQuestion.options.filter((_, i) => i !== optionIndex)
+    setEditingQuestion({ ...editingQuestion, options: newOptions })
+  }
+
   const updateEditingQuestion = (updates: Partial<Question>) => {
     if (!editingQuestion) return
 
@@ -1207,9 +1226,9 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                         index={questions.length}
                         onUpdate={(_, updates) => updateEditingQuestion(updates)}
                         onDelete={() => {}}
-                        onUpdateOption={(_, index, value) => updateQuestionOption(index, value)}
-                        onAddOption={() => addOption()}
-                        onRemoveOption={(_, index) => removeOption(index)}
+                        onUpdateOption={(_, index, value) => updateEditingQuestionOption(index, value)}
+                        onAddOption={() => addEditingQuestionOption()}
+                        onRemoveOption={(_, index) => removeEditingQuestionOption(index)}
                         t={t}
                         onChangeType={() => setShowTypeSelector(true)}
                       />
