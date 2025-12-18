@@ -149,8 +149,9 @@ export async function POST() {
         type: "ordering",
         question: "Arrange these operations in order (following PEMDAS)",
         questionKm: "រៀបចំប្រតិបត្តិការទាំងនេះតាមលំដាប់",
-        items: ["Parentheses", "Exponents", "Multiplication/Division", "Addition/Subtraction"],
-        correctAnswer: "auto-generated",
+        options: ["Parentheses", "Exponents", "Multiplication/Division", "Addition/Subtraction"],
+        optionsKm: ["វង់ក្រចក", "និទស្សន្ត", "គុណ/ចែក", "បូក/ដក"],
+        correctAnswer: ["Parentheses", "Exponents", "Multiplication/Division", "Addition/Subtraction"],
         points: 3,
       },
       {
@@ -400,10 +401,11 @@ export async function POST() {
       {
         id: crypto.randomUUID(),
         type: "ordering",
-        question: "រៀបចំប្រយោគឱ្យបានត្រឹមត្រូវ",
+        question: "រៀបចំប្រយោគឱ្យបានត្រឹមត្រូវ (Arrange the sentence correctly)",
         questionKm: "រៀបចំប្រយោគឱ្យបានត្រឹមត្រូវ",
-        items: ["ខ្ញុំ", "ទៅ", "រៀនសូត្រ", "នៅសាលា"],
-        correctAnswer: "auto-generated",
+        options: ["ខ្ញុំ", "ទៅ", "រៀនសូត្រ", "នៅសាលា"],
+        optionsKm: ["ខ្ញុំ", "ទៅ", "រៀនសូត្រ", "នៅសាលា"],
+        correctAnswer: ["ខ្ញុំ", "ទៅ", "រៀនសូត្រ", "នៅសាលា"],
         points: 3,
       },
       // Grade 10-12 - Literature & Advanced Grammar

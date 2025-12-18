@@ -145,8 +145,9 @@ const mathQuestions: Question[] = [
     type: "ordering",
     question: "Arrange these operations in order (following PEMDAS)",
     questionKm: "រៀបចំប្រតិបត្តិការទាំងនេះតាមលំដាប់",
-    items: ["Parentheses", "Exponents", "Multiplication/Division", "Addition/Subtraction"],
-    correctAnswer: "auto-generated",
+    options: ["Parentheses", "Exponents", "Multiplication/Division", "Addition/Subtraction"],
+    optionsKm: ["វង់ក្រចក", "និទស្សន្ត", "គុណ/ចែក", "បូក/ដក"],
+    correctAnswer: ["Parentheses", "Exponents", "Multiplication/Division", "Addition/Subtraction"],
     points: 3,
   },
   {
