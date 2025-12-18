@@ -68,6 +68,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null)
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set())
   const [isSingleQuestionPreviewOpen, setIsSingleQuestionPreviewOpen] = useState(false)
+  const [previewAnswer, setPreviewAnswer] = useState<any>(null)
+  const [previewFeedback, setPreviewFeedback] = useState<{ show: boolean; correct: boolean } | null>(null)
 
   useEffect(() => {
     if (!isAdmin) {
@@ -256,6 +258,71 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
     if (!editingQuestion || !editingQuestion.options || editingQuestion.options.length <= 2) return
     const newOptions = editingQuestion.options.filter((_, i) => i !== optionIndex)
     setEditingQuestion({ ...editingQuestion, options: newOptions })
+  }
+
+  // Check preview answer and show feedback
+  const checkPreviewAnswer = () => {
+    if (!editingQuestion || previewAnswer === null || previewAnswer === undefined) {
+      toast.warning(language === "km" ? "សូមជ្រើសរើសចម្លើយមុន" : "Please select an answer first")
+      return
+    }
+
+    let isCorrect = false
+    const correctAnswer = editingQuestion.correctAnswer
+
+    // Check based on question type
+    switch (editingQuestion.type) {
+      case 'multiple-choice':
+      case 'true-false':
+      case 'short-answer':
+      case 'image-choice':
+        isCorrect = previewAnswer === correctAnswer
+        break
+
+      case 'multiple-select':
+        if (Array.isArray(previewAnswer) && Array.isArray(correctAnswer)) {
+          isCorrect = JSON.stringify(previewAnswer.sort()) === JSON.stringify(correctAnswer.sort())
+        }
+        break
+
+      case 'fill-blanks':
+        if (Array.isArray(previewAnswer) && Array.isArray(correctAnswer)) {
+          isCorrect = previewAnswer.every((ans, idx) => ans.trim().toLowerCase() === correctAnswer[idx]?.trim().toLowerCase())
+        }
+        break
+
+      case 'ordering':
+      case 'drag-drop':
+        if (Array.isArray(previewAnswer) && Array.isArray(correctAnswer)) {
+          isCorrect = JSON.stringify(previewAnswer) === JSON.stringify(correctAnswer)
+        }
+        break
+
+      case 'matching':
+        if (typeof previewAnswer === 'object' && typeof correctAnswer === 'object') {
+          isCorrect = JSON.stringify(previewAnswer) === JSON.stringify(correctAnswer)
+        }
+        break
+
+      default:
+        isCorrect = previewAnswer === correctAnswer
+    }
+
+    // Show Khmer feedback
+    if (isCorrect) {
+      toast.success(language === "km" ? "ត្រឹមត្រូវ! 🎉" : "Correct! 🎉")
+    } else {
+      toast.error(language === "km" ? "មិនត្រឹមត្រូវ! សូមព្យាយាមម្តងទៀត" : "Incorrect! Try again")
+    }
+
+    setPreviewFeedback({ show: true, correct: isCorrect })
+  }
+
+  // Reset preview state when opening/closing
+  const openPreviewDialog = () => {
+    setPreviewAnswer(null)
+    setPreviewFeedback(null)
+    setIsSingleQuestionPreviewOpen(true)
   }
 
   const updateEditingQuestion = (updates: Partial<Question>) => {
@@ -1241,7 +1308,7 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                     <div className="flex-1">
                       <Button
                         variant="outline"
-                        onClick={() => setIsSingleQuestionPreviewOpen(true)}
+                        onClick={openPreviewDialog}
                         disabled={!editingQuestion?.question?.trim()}
                       >
                         <Eye className="h-4 w-4 mr-2" />
@@ -1302,10 +1369,10 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                       <CardContent className="space-y-4">
                         {/* Multiple Choice */}
                         {editingQuestion.type === "multiple-choice" && editingQuestion.options && (
-                          <RadioGroup>
+                          <RadioGroup value={previewAnswer || ""} onValueChange={setPreviewAnswer}>
                             {(language === "km" && editingQuestion.optionsKm ? editingQuestion.optionsKm : editingQuestion.options).map((option, idx) => (
                               <div key={idx} className="flex items-center space-x-2 mb-2">
-                                <RadioGroupItem value={option} id={`preview-${idx}`} disabled />
+                                <RadioGroupItem value={option} id={`preview-${idx}`} />
                                 <Label htmlFor={`preview-${idx}`} className="cursor-pointer">{option}</Label>
                               </div>
                             ))}
@@ -1317,7 +1384,18 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                           <div className="space-y-2">
                             {(language === "km" && editingQuestion.optionsKm ? editingQuestion.optionsKm : editingQuestion.options).map((option, idx) => (
                               <div key={idx} className="flex items-center space-x-2">
-                                <Checkbox id={`preview-check-${idx}`} disabled />
+                                <Checkbox
+                                  id={`preview-check-${idx}`}
+                                  checked={(previewAnswer || []).includes(option)}
+                                  onCheckedChange={(checked) => {
+                                    const current = previewAnswer || []
+                                    if (checked) {
+                                      setPreviewAnswer([...current, option])
+                                    } else {
+                                      setPreviewAnswer(current.filter((o: string) => o !== option))
+                                    }
+                                  }}
+                                />
                                 <Label htmlFor={`preview-check-${idx}`} className="cursor-pointer">{option}</Label>
                               </div>
                             ))}
@@ -1326,15 +1404,15 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
 
                         {/* True/False */}
                         {editingQuestion.type === "true-false" && (
-                          <RadioGroup>
+                          <RadioGroup value={previewAnswer || ""} onValueChange={setPreviewAnswer}>
                             <div className="flex items-center space-x-2 mb-2">
-                              <RadioGroupItem value="true" id="preview-true" disabled />
+                              <RadioGroupItem value="true" id="preview-true" />
                               <Label htmlFor="preview-true" className="cursor-pointer">
                                 {language === "km" ? "ត្រូវ" : "True"}
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="false" id="preview-false" disabled />
+                              <RadioGroupItem value="false" id="preview-false" />
                               <Label htmlFor="preview-false" className="cursor-pointer">
                                 {language === "km" ? "ខុស" : "False"}
                               </Label>
@@ -1346,7 +1424,8 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                         {editingQuestion.type === "short-answer" && (
                           <Input
                             placeholder={language === "km" ? "វាយចម្លើយរបស់អ្នក..." : "Type your answer..."}
-                            disabled
+                            value={previewAnswer || ""}
+                            onChange={(e) => setPreviewAnswer(e.target.value)}
                           />
                         )}
 
@@ -1440,10 +1519,10 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                               </div>
                             )}
                             {editingQuestion.options && (
-                              <RadioGroup>
+                              <RadioGroup value={previewAnswer || ""} onValueChange={setPreviewAnswer}>
                                 {(language === "km" && editingQuestion.optionsKm ? editingQuestion.optionsKm : editingQuestion.options).map((option, idx) => (
                                   <div key={idx} className="flex items-center space-x-2 mb-2">
-                                    <RadioGroupItem value={option} id={`preview-img-${idx}`} disabled />
+                                    <RadioGroupItem value={option} id={`preview-img-${idx}`} />
                                     <Label htmlFor={`preview-img-${idx}`} className="cursor-pointer">{option}</Label>
                                   </div>
                                 ))}
@@ -1486,8 +1565,24 @@ export function QuizBuilder({ initialQuiz }: QuizBuilderProps) {
                   </div>
                 )}
 
-                <DialogFooter>
-                  <Button onClick={() => setIsSingleQuestionPreviewOpen(false)}>
+                <DialogFooter className="gap-2">
+                  {!previewFeedback && (
+                    <Button onClick={checkPreviewAnswer} variant="default">
+                      {language === "km" ? "ពិនិត្យចម្លើយ" : "Check Answer"}
+                    </Button>
+                  )}
+                  {previewFeedback && (
+                    <Button
+                      onClick={() => {
+                        setPreviewAnswer(null)
+                        setPreviewFeedback(null)
+                      }}
+                      variant="outline"
+                    >
+                      {language === "km" ? "ព្យាយាមម្តងទៀត" : "Try Again"}
+                    </Button>
+                  )}
+                  <Button onClick={() => setIsSingleQuestionPreviewOpen(false)} variant="outline">
                     {language === "km" ? "បិទមើលជាមុន" : "Close Preview"}
                   </Button>
                 </DialogFooter>
